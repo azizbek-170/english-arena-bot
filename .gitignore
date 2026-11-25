@@ -1,0 +1,18 @@
+# Maxfiy ma'lumotlar
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Loglar
+*.log
+bot_restart.log
+
+# PyCharm / OS
+.idea/
+.vscode/
+Thumbs.db
