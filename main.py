@@ -171,6 +171,8 @@ async def callback_router(update, context):
         return await admin_h.users_manage(update, context)
     if head == "adm_stats":
         return await admin_h.admin_stats(update, context)
+    if head == "adm_export_results":
+        return await admin_h.admin_export_results(update, context)
     if head == "arena_manage":
         return await admin_h.arena_manage(update, context)
 

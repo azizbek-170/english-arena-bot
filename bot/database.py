@@ -212,6 +212,19 @@ def init_db():
         )
         if not cur.fetchone():
             cur.execute("ALTER TABLE users ADD COLUMN quiz_state TEXT")
+        for col, ddl in [
+            ("attempt_count", "ALTER TABLE questions ADD COLUMN attempt_count INTEGER NOT NULL DEFAULT 0"),
+            ("wrong_count", "ALTER TABLE questions ADD COLUMN wrong_count INTEGER NOT NULL DEFAULT 0"),
+        ]:
+            cur.execute(
+                """
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'questions' AND column_name = %s
+                """,
+                (col,),
+            )
+            if not cur.fetchone():
+                cur.execute(ddl)
         conn.commit()
 
 
@@ -425,6 +438,34 @@ def update_question(question_id: int, **fields):
     )
 
 
+def record_question_attempt(question_id: int, is_correct: bool):
+    if is_correct:
+        _execute("UPDATE questions SET attempt_count = attempt_count + 1 WHERE id = %s", (question_id,))
+    else:
+        _execute(
+            "UPDATE questions SET attempt_count = attempt_count + 1, wrong_count = wrong_count + 1 WHERE id = %s",
+            (question_id,),
+        )
+
+
+def get_hardest_questions(limit=5):
+    return _fetchall(
+        """
+        SELECT q.id, q.uz_word, q.en_word, q.question_type, q.attempt_count, q.wrong_count,
+               a.title AS arena_title,
+               CASE WHEN q.attempt_count > 0
+                    THEN ROUND((q.wrong_count::numeric * 100 / q.attempt_count), 1)
+                    ELSE 0 END AS wrong_percent
+        FROM questions q
+        LEFT JOIN arenas a ON a.id = q.arena_id
+        WHERE q.attempt_count >= 3
+        ORDER BY wrong_percent DESC, q.wrong_count DESC, q.attempt_count DESC
+        LIMIT %s
+        """,
+        (limit,),
+    )
+
+
 def delete_question(question_id: int):
     _execute("DELETE FROM questions WHERE id = %s", (question_id,))
 
@@ -578,6 +619,20 @@ def get_user_stats(user_id):
     )
 
 
+def list_all_results(limit=5000):
+    return _fetchall(
+        """
+        SELECT r.*, u.name AS user_name, u.login AS user_login, a.title AS arena_title, a.level AS arena_level
+        FROM results r
+        LEFT JOIN users u ON u.id = r.user_id
+        LEFT JOIN arenas a ON a.id = r.arena_id
+        ORDER BY r.completed_at DESC
+        LIMIT %s
+        """,
+        (limit,),
+    )
+
+
 def get_admin_stats():
     stats = _fetchone(
         """
@@ -603,4 +658,5 @@ def get_admin_stats():
         """
     )
     stats["top_arenas"] = top_arenas
+    stats["hardest_questions"] = get_hardest_questions(5)
     return stats

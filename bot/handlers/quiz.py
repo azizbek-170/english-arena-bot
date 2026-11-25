@@ -206,7 +206,12 @@ async def answer_mcq(update, context: ContextTypes.DEFAULT_TYPE, arena_id, quest
     q = quiz["questions"][quiz["index"]]
     correct = q["correct"]
     points = _question_points(quiz, q)
-    if letter == correct:
+    is_correct = letter == correct
+    try:
+        db.record_question_attempt(q["id"], is_correct)
+    except Exception:
+        logger.warning("Savol statistikasi saqlanmadi: qid=%s", q.get("id"))
+    if is_correct:
         quiz["score"] += points
         quiz["streak"] = 0
         feedback = f"✅ To'g'ri! +{points} achko"
@@ -251,7 +256,12 @@ async def handle_typing(update, context: ContextTypes.DEFAULT_TYPE):
     correct_answer = normalize_answer(q["en_word"])
     points = _question_points(quiz, q)
 
-    if typed == correct_answer:
+    is_correct = typed == correct_answer
+    try:
+        db.record_question_attempt(q["id"], is_correct)
+    except Exception:
+        logger.warning("Savol statistikasi saqlanmadi: qid=%s", q.get("id"))
+    if is_correct:
         quiz["score"] += points
         quiz["streak"] = 0
         feedback = f"✅ To'g'ri yozdingiz! +{points} achko"

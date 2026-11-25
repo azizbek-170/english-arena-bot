@@ -74,7 +74,39 @@ async def admin_stats(update, context):
             lines.append(
                 f"• {a['title']} ({a['level']}) — {a['attempts']} urinish, o'rtacha {_fmt_percent(a['avg_percent'])}%"
             )
+    hardest = stats.get("hardest_questions") or []
+    if hardest:
+        lines.append("\nEng qiyin savollar:")
+        for q in hardest:
+            lines.append(
+                f"• {q['uz_word']} → {q['en_word']} ({q.get('arena_title','-')}) — "
+                f"xato {_fmt_percent(q.get('wrong_percent'))}% ({q.get('wrong_count',0)}/{q.get('attempt_count',0)})"
+            )
     await _edit(update, "\n".join(lines), kb.admin_menu())
+
+
+async def admin_export_results(update, context):
+    if not _admin(update):
+        return
+    rows = db.list_all_results()
+    if not rows:
+        await _edit(update, "❌ Hali natijalar yo'q.", kb.admin_menu())
+        return
+
+    output = io.StringIO()
+    fieldnames = ["completed_at", "user_name", "user_login", "arena_title", "arena_level", "score", "max_score", "percentage", "medal"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for r in rows:
+        writer.writerow({k: r.get(k, "") for k in fieldnames})
+
+    data = io.BytesIO(output.getvalue().encode("utf-8-sig"))
+    await update.callback_query.message.reply_document(
+        document=data,
+        filename="results_export.csv",
+        caption=f"📥 Natijalar eksporti: {len(rows)} ta",
+    )
+    await _edit(update, f"✅ Natijalar CSV tayyor: {len(rows)} ta.", kb.admin_menu())
 
 
 # =========================================================================== #
