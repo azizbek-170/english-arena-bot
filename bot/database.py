@@ -1,6 +1,7 @@
 """PostgreSQL bilan ishlash: jadvallar, userlar, arenalar, savollar va natijalar."""
 
 import hashlib
+import json
 import random
 import re
 import secrets
@@ -203,6 +204,14 @@ def init_db():
             cur.execute(
                 "ALTER TABLE questions ADD COLUMN question_type TEXT NOT NULL DEFAULT 'vocab'"
             )
+        cur.execute(
+            """
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'users' AND column_name = 'quiz_state'
+            """
+        )
+        if not cur.fetchone():
+            cur.execute("ALTER TABLE users ADD COLUMN quiz_state TEXT")
         conn.commit()
 
 
@@ -215,6 +224,25 @@ def get_user_by_telegram(telegram_id: int):
 
 def get_user_by_id(user_id: int):
     return _fetchone("SELECT * FROM users WHERE id = %s", (user_id,))
+
+
+def save_quiz_state(telegram_id: int, quiz_state):
+    payload = json.dumps(quiz_state, ensure_ascii=False, default=str) if quiz_state is not None else None
+    _execute("UPDATE users SET quiz_state = %s WHERE telegram_id = %s", (payload, telegram_id))
+
+
+def load_quiz_state(telegram_id: int):
+    row = _fetchone("SELECT quiz_state FROM users WHERE telegram_id = %s", (telegram_id,))
+    if not row or not row.get("quiz_state"):
+        return None
+    try:
+        return json.loads(row["quiz_state"])
+    except Exception:
+        return None
+
+
+def clear_quiz_state(telegram_id: int):
+    _execute("UPDATE users SET quiz_state = NULL WHERE telegram_id = %s", (telegram_id,))
 
 
 def get_user_by_login(login: str):

@@ -35,6 +35,7 @@ async def cmd_start(update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["flow"] = None
     context.user_data.pop("reg", None)
     context.user_data["quiz"] = None
+    db.clear_quiz_state(tg_id)
 
     if tg_id == ADMIN_ID:
         db.ensure_admin(tg_id, first_name)

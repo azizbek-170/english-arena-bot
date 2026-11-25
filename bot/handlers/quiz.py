@@ -131,6 +131,7 @@ async def start_quiz(update, context: ContextTypes.DEFAULT_TYPE, arena_id: int):
         "max_score": max_score,
         "user_id": user["id"],
     }
+    db.save_quiz_state(update.effective_user.id, context.user_data["quiz"])
     logger.info(
         "TEST BOSHLANDI: user=%s arena=%s savollar=%s",
         user["id"], arena["title"], len(questions),
@@ -188,8 +189,19 @@ def _apply_penalty(quiz) -> str:
 async def answer_mcq(update, context: ContextTypes.DEFAULT_TYPE, arena_id, question_id, letter):
     quiz = context.user_data.get("quiz")
     if not quiz or quiz.get("stage") != "mcq":
-        await safe_edit(update.callback_query, "❌ Bu savol allaqachon javoblangan.")
-        return
+        restored = db.load_quiz_state(update.effective_user.id)
+        if restored and restored.get("stage") == "mcq":
+            rq = restored.get("questions", [])
+            ri = restored.get("index", 0)
+            if ri < len(rq) and str(rq[ri].get("id")) == str(question_id):
+                context.user_data["quiz"] = restored
+                quiz = restored
+            else:
+                await safe_edit(update.callback_query, "❌ Bu savol allaqachon javoblangan yoki sessiya yangilangan. /start bosing.")
+                return
+        else:
+            await safe_edit(update.callback_query, "❌ Bu savol allaqachon javoblangan yoki sessiya yangilangan. /start bosing.")
+            return
 
     q = quiz["questions"][quiz["index"]]
     correct = q["correct"]
@@ -216,16 +228,23 @@ async def answer_mcq(update, context: ContextTypes.DEFAULT_TYPE, arena_id, quest
         typing_hint = f"2-qism: «{q['uz_word']}» so'zining inglizchasini o'zingiz yozing:"
     logger.info("1-QISM javobi: %s, jami ball=%s, ketma-ket xato=%s", letter, quiz["score"], quiz["streak"])
     quiz["stage"] = "typing"
+    db.save_quiz_state(update.effective_user.id, quiz)
     await safe_edit(update.callback_query, feedback + "\n\n" + typing_hint)
 
 
 async def handle_typing(update, context: ContextTypes.DEFAULT_TYPE):
     quiz = context.user_data.get("quiz")
     if not quiz or quiz.get("stage") != "typing":
-        await update.message.reply_text(
-            "Siz arenadasiz, chiqish uchun /cancel_arena tugmasini bosing."
-        )
-        return
+        restored = db.load_quiz_state(update.effective_user.id)
+        if restored and restored.get("stage") == "typing":
+            context.user_data["quiz"] = restored
+            quiz = restored
+        else:
+            await update.message.reply_text(
+                "⚠️ Test sessiyasi topilmadi (bot qayta ishga tushgan bo'lishi mumkin). "
+                "Iltimos, /start bosib arenani qaytadan boshlang."
+            )
+            return
 
     q = quiz["questions"][quiz["index"]]
     typed = normalize_answer(update.message.text)
@@ -250,6 +269,7 @@ async def handle_typing(update, context: ContextTypes.DEFAULT_TYPE):
 
     if quiz["index"] < len(quiz["questions"]):
         quiz["stage"] = "mcq"
+        db.save_quiz_state(update.effective_user.id, quiz)
         await send_question(context, update.effective_chat.id)
     else:
         await finish_quiz(update, context)
@@ -287,6 +307,7 @@ async def finish_quiz(update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data["quiz"] = None
     context.user_data["flow"] = None
+    db.clear_quiz_state(update.effective_user.id)
 
     text = (
         "🏆 TEST YAKUNLANDI\n\n"
@@ -313,6 +334,7 @@ async def cancel_arena(update, context: ContextTypes.DEFAULT_TYPE):
         return
     context.user_data["quiz"] = None
     context.user_data["flow"] = None
+    db.clear_quiz_state(update.effective_user.id)
     if update.message:
         await update.message.reply_text(
             "❌ Arenadan chiqdingiz.", reply_markup=kb.back_button("eng_arenas")
