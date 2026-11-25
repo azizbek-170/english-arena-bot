@@ -5,6 +5,8 @@
 Admin musobaqalar (arenalar) yaratadi, ularga savol qo'shadi yoki AI orqali tayyor lug'at/gap-fill/idiom to'plamini yuklaydi.
 Ishtirokchilar ikki bosqichli test topshiradi: variant tanlash (`a/b/c/d`) va javobni o'zi yozish (typing).
 
+24/7 ishga tushirish bo'yicha qo'llanma: [`DEPLOY_GITHUB_RENDER.md`](DEPLOY_GITHUB_RENDER.md) (GitHub + Render Free + Neon Free, karta kerak emas).
+
 **Savol turlari:**
 - 📖 **Lug'at so'zi** — o'zbekcha so'z → inglizcha javob.
 - ✏️ **Gap to'ldirish (gap filling)** — `I ___ from Uzbekistan.` kabi gapdagi nuqta o'rniga to'g'ri so'zni topish.
