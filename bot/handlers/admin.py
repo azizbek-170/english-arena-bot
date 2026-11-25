@@ -751,6 +751,32 @@ async def user_results(update, context, user_id: int):
     await _edit(update, "\n".join(lines), kb.back_button(f"udetail:{user_id}"))
 
 
+async def user_results_export(update, context, user_id: int):
+    if not _admin(update):
+        return
+    user = db.get_user_by_id(user_id)
+    if not user:
+        await _edit(update, "❌ User topilmadi.", kb.back_button("user_list"))
+        return
+    rows = db.list_user_results(user_id, limit=5000)
+    if not rows:
+        await _edit(update, "❌ Bu userda natijalar yo'q.", kb.back_button(f"udetail:{user_id}"))
+        return
+    output = io.StringIO()
+    fieldnames = ["completed_at", "arena_title", "arena_level", "score", "max_score", "percentage", "medal"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for r in rows:
+        writer.writerow({k: r.get(k, "") for k in fieldnames})
+    data = io.BytesIO(output.getvalue().encode("utf-8-sig"))
+    await update.callback_query.message.reply_document(
+        document=data,
+        filename=f"user_{user_id}_results.csv",
+        caption=f"📥 {user['name']} natijalari: {len(rows)} ta",
+    )
+    await _edit(update, f"✅ {user['name']} natijalari CSV tayyor: {len(rows)} ta.", kb.back_button(f"udetail:{user_id}"))
+
+
 async def user_edit_start(update, context, user_id: int, field: str):
     flows = {
         "name": "edit_name",
