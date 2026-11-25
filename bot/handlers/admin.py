@@ -256,7 +256,7 @@ async def question_correct_callback(update, context, letter: str):
     await arena_detail(update, context, arena_id)
 
 
-async def questions_list(update, context, arena_id: int, delete_mode=False):
+async def questions_list(update, context, arena_id: int, delete_mode=False, page=0):
     questions = db.list_questions(arena_id)
     if not questions:
         await _edit(
@@ -265,14 +265,21 @@ async def questions_list(update, context, arena_id: int, delete_mode=False):
             kb.back_button(f"arena:{arena_id}"),
         )
         return
+    per_page = 10
+    total_pages = max(1, (len(questions) + per_page - 1) // per_page)
+    page = max(0, min(page, total_pages - 1))
+    start = page * per_page
+    chunk = questions[start:start + per_page]
     title = "🗑 SAVOL O'CHIRISH" if delete_mode else "📋 SAVOLLAR RO'YXATI"
+    arena = db.get_arena(arena_id)
+    arena_title = arena["title"] if arena else "Arena"
     text = (
         f"{title}\n"
-        f"Arena: {db.get_arena(arena_id)['title']}\n"
-        f"Jami: {len(questions)} ta\n\n"
+        f"Arena: {arena_title}\n"
+        f"Jami: {len(questions)} ta | Sahifa: {page + 1}/{total_pages}\n\n"
         "Savolni tanlang:"
     )
-    await _edit(update, text, kb.questions_keyboard(questions, arena_id, delete_mode))
+    await _edit(update, text, kb.questions_keyboard(chunk, arena_id, delete_mode, page, total_pages))
 
 
 async def question_info(update, context, question_id: int, arena_id: int):
@@ -474,10 +481,18 @@ async def ai_vocab_apply(update, context, arena_id: int, level: str, qtype: str 
 # =========================================================================== #
 # Userlar boshqaruvi
 # =========================================================================== #
-async def users_list(update, context):
+async def users_list(update, context, page=0):
     users = db.list_users()
-    text = "👥 USERLAR RO'YXATI\n\n" if users else "👥 Hali user yo'q."
-    await _edit(update, text + "User yoki amalni tanlang:", kb.users_list_keyboard(users))
+    if not users:
+        await _edit(update, "👥 Hali user yo'q.", kb.users_list_keyboard([]))
+        return
+    per_page = 10
+    total_pages = max(1, (len(users) + per_page - 1) // per_page)
+    page = max(0, min(page, total_pages - 1))
+    start = page * per_page
+    chunk = users[start:start + per_page]
+    text = f"👥 USERLAR RO'YXATI\nJami: {len(users)} ta | Sahifa: {page + 1}/{total_pages}\n\nUser yoki amalni tanlang:"
+    await _edit(update, text, kb.users_list_keyboard(chunk, page, total_pages))
 
 
 async def user_add_start(update, context):

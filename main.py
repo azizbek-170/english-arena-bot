@@ -140,6 +140,9 @@ async def callback_router(update, context):
     p = data.split(":")
     head = p[0]
 
+    if head == "noop":
+        return
+
     # --- Ro'yxatdan o'tish ---
     if head == "reg_yes":
         return await start_h.registration_yes(update, context)
@@ -189,8 +192,12 @@ async def callback_router(update, context):
         return await admin_h.question_correct_callback(update, context, p[1])
     if head == "qlist" and len(p) == 2:
         return await admin_h.questions_list(update, context, int(p[1]))
+    if head == "qlist" and len(p) == 3:
+        return await admin_h.questions_list(update, context, int(p[1]), page=int(p[2]))
     if head == "qdelmode" and len(p) == 2:
         return await admin_h.questions_list(update, context, int(p[1]), delete_mode=True)
+    if head == "qdelmode" and len(p) == 3:
+        return await admin_h.questions_list(update, context, int(p[1]), delete_mode=True, page=int(p[2]))
     if head == "qinfo" and len(p) == 3:
         return await admin_h.question_info(update, context, int(p[1]), int(p[2]))
     if head == "qedit" and len(p) == 3:
@@ -217,8 +224,10 @@ async def callback_router(update, context):
         return await admin_h.ai_vocab_apply(update, context, int(p[1]), p[2], "idiom")
 
     # --- Userlar ---
-    if head == "user_list":
+    if head == "user_list" and len(p) == 1:
         return await admin_h.users_list(update, context)
+    if head == "user_list" and len(p) == 2:
+        return await admin_h.users_list(update, context, page=int(p[1]))
     if head == "user_add":
         return await admin_h.user_add_start(update, context)
     if head == "udetail" and len(p) == 2:

@@ -157,7 +157,7 @@ def letters_keyboard(prefix: str, arena_id=None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 
-def questions_keyboard(questions, arena_id: int, delete_mode=False) -> InlineKeyboardMarkup:
+def questions_keyboard(questions, arena_id: int, delete_mode=False, page=0, total_pages=1) -> InlineKeyboardMarkup:
     rows = []
     for q in questions:
         prefix = "qdel" if delete_mode else "qinfo"
@@ -169,6 +169,15 @@ def questions_keyboard(questions, arena_id: int, delete_mode=False) -> InlineKey
                 )
             ]
         )
+    if total_pages > 1:
+        nav = []
+        list_prefix = "qdelmode" if delete_mode else "qlist"
+        if page > 0:
+            nav.append(InlineKeyboardButton("⬅️", callback_data=cb(list_prefix, arena_id, page - 1)))
+        nav.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))
+        if page < total_pages - 1:
+            nav.append(InlineKeyboardButton("➡️", callback_data=cb(list_prefix, arena_id, page + 1)))
+        rows.append(nav)
     rows.append(
         [InlineKeyboardButton("⬅️ Arenaga qaytish", callback_data=cb("arena", arena_id))]
     )
@@ -213,7 +222,7 @@ def question_edit_correct_keyboard(question_id: int, arena_id: int) -> InlineKey
     )
 
 
-def users_list_keyboard(users) -> InlineKeyboardMarkup:
+def users_list_keyboard(users, page=0, total_pages=1) -> InlineKeyboardMarkup:
     rows = []
     for user in users:
         icon = "👑" if user["role"] == "admin" else "👤"
@@ -226,6 +235,14 @@ def users_list_keyboard(users) -> InlineKeyboardMarkup:
                 )
             ]
         )
+    if total_pages > 1:
+        nav = []
+        if page > 0:
+            nav.append(InlineKeyboardButton("⬅️", callback_data=cb("user_list", page - 1)))
+        nav.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))
+        if page < total_pages - 1:
+            nav.append(InlineKeyboardButton("➡️", callback_data=cb("user_list", page + 1)))
+        rows.append(nav)
     rows.append([InlineKeyboardButton("⬅️ Orqaga", callback_data="adm_users")])
     return InlineKeyboardMarkup(rows)
 
