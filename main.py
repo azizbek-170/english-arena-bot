@@ -81,6 +81,7 @@ TEXT_FLOWS = {
     "edit_name": admin_h.edit_name_text,
     "edit_login": admin_h.edit_login_text,
     "edit_pass": admin_h.edit_pass_text,
+    "qe_text": admin_h.qe_text,
 }
 
 
@@ -93,7 +94,7 @@ async def text_router(update, context):
     if text in (kb.BTN_ADMIN, kb.BTN_ENGLISH, kb.BTN_LOGIN):
         context.user_data["flow"] = None
         context.user_data["quiz"] = None
-        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id"):
+        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id", "edit_q"):
             context.user_data.pop(key, None)
         if text == kb.BTN_ADMIN:
             if update.effective_user.id != ADMIN_ID:
@@ -192,6 +193,12 @@ async def callback_router(update, context):
         return await admin_h.questions_list(update, context, int(p[1]), delete_mode=True)
     if head == "qinfo" and len(p) == 3:
         return await admin_h.question_info(update, context, int(p[1]), int(p[2]))
+    if head == "qedit" and len(p) == 3:
+        return await admin_h.question_edit_menu(update, context, int(p[1]), int(p[2]))
+    if head == "qef" and len(p) == 4:
+        return await admin_h.question_edit_field_start(update, context, int(p[1]), int(p[2]), p[3])
+    if head == "qecorr" and len(p) == 4:
+        return await admin_h.question_edit_correct(update, context, int(p[1]), int(p[2]), p[3])
     if head == "qdel" and len(p) == 3:
         return await admin_h.question_delete(update, context, int(p[1]), int(p[2]))
 

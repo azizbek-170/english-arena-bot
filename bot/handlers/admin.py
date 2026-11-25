@@ -303,12 +303,121 @@ async def question_info(update, context, question_id: int, arena_id: int):
             f"\n\n📖 Definition: {info.get('definition', '-')}"
             f"\n🇺🇿 Tarjima: {info.get('uzbek', '-')}"
         )
-    await _edit(update, text, kb.back_button(f"qlist:{arena_id}"))
+    await _edit(update, text, kb.question_info_keyboard(question_id, arena_id))
 
 
 async def question_delete(update, context, question_id: int, arena_id: int):
     db.delete_question(question_id)
     await questions_list(update, context, arena_id, delete_mode=True)
+
+
+# --------------------------------------------------------------------------- #
+# Savol tahrirlash
+# --------------------------------------------------------------------------- #
+_EDIT_FIELD_MAP = {
+    "uz": "uz_word",
+    "en": "en_word",
+    "a": "opt_a",
+    "b": "opt_b",
+    "c": "opt_c",
+    "d": "opt_d",
+    "correct": "correct",
+}
+
+
+async def question_edit_menu(update, context, question_id: int, arena_id: int):
+    q = db.get_question(question_id)
+    if not q:
+        await _edit(update, "❌ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
+        return
+    await _edit(
+        update,
+        f"✏️ SAVOLNI TAHRIRLASH\n\n{q['uz_word']} → {q['en_word']}\n\nQaysi maydonni o'zgartirasiz?",
+        kb.question_edit_keyboard(question_id, arena_id),
+    )
+
+
+async def question_edit_field_start(update, context, question_id: int, arena_id: int, field: str):
+    q = db.get_question(question_id)
+    if not q:
+        await _edit(update, "❌ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
+        return
+    if field == "correct":
+        await _edit(
+            update,
+            f"To'g'ri javob harfini tanlang (hozirgi: {q['correct'].upper()}):",
+            kb.question_edit_correct_keyboard(question_id, arena_id),
+        )
+        return
+
+    context.user_data["edit_q"] = {"question_id": question_id, "arena_id": arena_id, "field": field}
+    context.user_data["flow"] = "qe_text"
+    qtype = q.get("question_type", "vocab")
+    prompts = {
+        "uz": {
+            "vocab": "Yangi o'zbekcha so'zni kiriting:",
+            "gap": "Yangi nuqtali gapni kiriting:",
+            "idiom": "Yangi idiomni kiriting:",
+        },
+        "en": {
+            "vocab": "Yangi inglizcha javobni kiriting:",
+            "gap": "Yangi nuqta o'rniga keladigan so'zni kiriting:",
+            "idiom": "Yangi idiom so'zini kiriting (typing bosqichi uchun):",
+        },
+        "a": {"_": "Yangi A variantni kiriting:"},
+        "b": {"_": "Yangi B variantni kiriting:"},
+        "c": {"_": "Yangi C variantni kiriting:"},
+        "d": {"_": "Yangi D variantni kiriting:"},
+    }
+    by_type = prompts.get(field, {"_": "Yangi qiymatni kiriting:"})
+    prompt = by_type.get(qtype) or by_type.get("_") or "Yangi qiymatni kiriting:"
+    current = q.get(_EDIT_FIELD_MAP[field], "")
+    await _edit(update, f"{prompt}\n\nHozirgi: {current}")
+
+
+async def qe_text(update, context):
+    data = context.user_data.get("edit_q") or {}
+    qid, aid, field = data.get("question_id"), data.get("arena_id"), data.get("field")
+    if not qid or not field:
+        context.user_data["flow"] = None
+        await update.message.reply_text("❌ Tahrirlash jarayoni topilmadi.")
+        return
+    db_field = _EDIT_FIELD_MAP.get(field)
+    value = (update.message.text or "").strip()
+    if not value or not db_field:
+        await update.message.reply_text("❌ Qiymat bo'sh bo'lmasin.")
+        return
+    db.update_question(qid, **{db_field: value})
+    context.user_data["flow"] = None
+    context.user_data.pop("edit_q", None)
+    await update.message.reply_text("✅ Saqlandi.")
+    # show updated question info
+    q = db.get_question(qid)
+    if not q:
+        await update.message.reply_text("❌ Savol topilmadi.")
+        return
+    # reuse question_info rendering by sending a fake update-like message? easier to build text
+    text = (
+        f"📋 SAVOL\n\n"
+        f"📝 {q['uz_word']}\n"
+        f"🇬🇧 {q['en_word']}\n\n"
+        f"A) {q['opt_a']}\nB) {q['opt_b']}\nC) {q['opt_c']}\nD) {q['opt_d']}\n\n"
+        f"✅ To'g'ri javob: {q['correct'].upper()}\n"
+        f"Turi: {q.get('question_type', 'vocab')}"
+    )
+    qtype = q.get("question_type", "vocab")
+    if qtype == "idiom":
+        info = get_idiom_info(q["en_word"]) or {}
+        text += (
+            f"\n\n📖 Definition: {info.get('definition', '-')}"
+            f"\n🇺🇿 Tarjima: {info.get('uzbek', '-')}"
+        )
+    await update.message.reply_text(text, reply_markup=kb.question_info_keyboard(qid, aid))
+
+
+async def question_edit_correct(update, context, question_id: int, arena_id: int, letter: str):
+    db.update_question(question_id, correct=letter)
+    await question_info(update, context, question_id, arena_id)
 
 
 # =========================================================================== #

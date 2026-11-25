@@ -175,6 +175,44 @@ def questions_keyboard(questions, arena_id: int, delete_mode=False) -> InlineKey
     return InlineKeyboardMarkup(rows)
 
 
+def question_info_keyboard(question_id: int, arena_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("✏️ Tahrirlash", callback_data=cb("qedit", question_id, arena_id))],
+            [InlineKeyboardButton("⬅️ Savollar ro'yxati", callback_data=cb("qlist", arena_id))],
+        ]
+    )
+
+
+def question_edit_keyboard(question_id: int, arena_id: int) -> InlineKeyboardMarkup:
+    qid, aid = question_id, arena_id
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("Savol/gap/idiom matni", callback_data=cb("qef", qid, aid, "uz"))],
+            [InlineKeyboardButton("Javob/idiom so'zi", callback_data=cb("qef", qid, aid, "en"))],
+            [
+                InlineKeyboardButton("A", callback_data=cb("qef", qid, aid, "a")),
+                InlineKeyboardButton("B", callback_data=cb("qef", qid, aid, "b")),
+                InlineKeyboardButton("C", callback_data=cb("qef", qid, aid, "c")),
+                InlineKeyboardButton("D", callback_data=cb("qef", qid, aid, "d")),
+            ],
+            [InlineKeyboardButton("To'g'ri javob harfi", callback_data=cb("qef", qid, aid, "correct"))],
+            [InlineKeyboardButton("⬅️ Savolga qaytish", callback_data=cb("qinfo", qid, aid))],
+        ]
+    )
+
+
+def question_edit_correct_keyboard(question_id: int, arena_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(letter.upper(), callback_data=cb("qecorr", question_id, arena_id, letter))
+                for letter in "abcd"
+            ]
+        ]
+    )
+
+
 def users_list_keyboard(users) -> InlineKeyboardMarkup:
     rows = []
     for user in users:

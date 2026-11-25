@@ -379,6 +379,24 @@ def add_question(arena_id, uz, en, a, b, c, d, correct, qtype="vocab"):
     )
 
 
+def update_question(question_id: int, **fields):
+    allowed = {"uz_word", "en_word", "opt_a", "opt_b", "opt_c", "opt_d", "correct", "question_type"}
+    sets = []
+    params = []
+    for key, value in fields.items():
+        if key in allowed and value is not None:
+            sets.append(f"{key} = %s")
+            params.append(value)
+    if not sets:
+        return get_question(question_id)
+    params.append(question_id)
+    return _execute(
+        f"UPDATE questions SET {', '.join(sets)} WHERE id = %s RETURNING *",
+        tuple(params),
+        returning=True,
+    )
+
+
 def delete_question(question_id: int):
     _execute("DELETE FROM questions WHERE id = %s", (question_id,))
 
