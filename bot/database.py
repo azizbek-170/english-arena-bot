@@ -403,6 +403,22 @@ def list_questions(arena_id: int):
     return _fetchall("SELECT * FROM questions WHERE arena_id = %s ORDER BY id", (arena_id,))
 
 
+def search_questions(arena_id: int, query: str, limit=20):
+    q = f"%{query.strip()}%"
+    return _fetchall(
+        """
+        SELECT * FROM questions
+        WHERE arena_id = %s AND (
+            uz_word ILIKE %s OR en_word ILIKE %s OR
+            opt_a ILIKE %s OR opt_b ILIKE %s OR opt_c ILIKE %s OR opt_d ILIKE %s
+        )
+        ORDER BY id
+        LIMIT %s
+        """,
+        (arena_id, q, q, q, q, q, q, limit),
+    )
+
+
 def get_question(question_id: int):
     return _fetchone("SELECT * FROM questions WHERE id = %s", (question_id,))
 

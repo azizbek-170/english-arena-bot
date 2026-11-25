@@ -317,6 +317,43 @@ async def questions_list(update, context, arena_id: int, delete_mode=False, page
     await _edit(update, text, kb.questions_keyboard(chunk, arena_id, delete_mode, page, total_pages))
 
 
+async def question_search_start(update, context, arena_id: int):
+    if not _admin(update):
+        return
+    context.user_data["flow"] = "q_search"
+    context.user_data["search_arena_id"] = arena_id
+    await _edit(update, "🔍 Qidirish uchun so'z yoki ibora yozing:\n\nBekor qilish uchun /cancel yozing.")
+
+
+async def q_search_text(update, context):
+    if not _admin(update):
+        return
+    arena_id = context.user_data.get("search_arena_id")
+    query = (update.message.text or "").strip()
+    if query.lower() in ("/cancel", "bekor"):
+        context.user_data["flow"] = None
+        context.user_data.pop("search_arena_id", None)
+        await update.message.reply_text("❌ Qidiruv bekor qilindi.")
+        return
+    if not arena_id or not query:
+        await update.message.reply_text("❌ Qidiruv so'zini kiriting.")
+        return
+    results = db.search_questions(arena_id, query, limit=20)
+    context.user_data["flow"] = None
+    context.user_data.pop("search_arena_id", None)
+    if not results:
+        await update.message.reply_text(
+            f"🔍 \"{query}\" bo'yicha hech narsa topilmadi.",
+            reply_markup=kb.back_button(f"arena:{arena_id}"),
+        )
+        return
+    text = f"🔍 \"{query}\" bo'yicha natijalar: {len(results)} ta\n\nSavolni tanlang:"
+    await update.message.reply_text(
+        text,
+        reply_markup=kb.questions_keyboard(results, arena_id, delete_mode=False),
+    )
+
+
 async def question_info(update, context, question_id: int, arena_id: int):
     q = db.get_question(question_id)
     if not q:

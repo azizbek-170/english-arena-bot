@@ -123,6 +123,7 @@ def arena_detail_keyboard(arena) -> InlineKeyboardMarkup:
                 InlineKeyboardButton("📋 Savollar ro'yxati", callback_data=cb("qlist", aid)),
                 InlineKeyboardButton("🗑 Savol o'chirish", callback_data=cb("qdelmode", aid)),
             ],
+            [InlineKeyboardButton("🔍 Savol qidirish", callback_data=cb("qsearch", aid))],
             [
                 InlineKeyboardButton("📤 CSV eksport", callback_data=cb("qexport", aid)),
                 InlineKeyboardButton("📥 CSV import", callback_data=cb("qimport", aid)),

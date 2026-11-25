@@ -82,6 +82,7 @@ TEXT_FLOWS = {
     "edit_login": admin_h.edit_login_text,
     "edit_pass": admin_h.edit_pass_text,
     "qe_text": admin_h.qe_text,
+    "q_search": admin_h.q_search_text,
 }
 
 
@@ -94,7 +95,7 @@ async def text_router(update, context):
     if text in (kb.BTN_ADMIN, kb.BTN_ENGLISH, kb.BTN_LOGIN):
         context.user_data["flow"] = None
         context.user_data["quiz"] = None
-        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id", "edit_q", "import_arena_id"):
+        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id", "edit_q", "import_arena_id", "search_arena_id"):
             context.user_data.pop(key, None)
         if text == kb.BTN_ADMIN:
             if update.effective_user.id != ADMIN_ID:
@@ -223,6 +224,8 @@ async def callback_router(update, context):
         return await admin_h.questions_export(update, context, int(p[1]))
     if head == "qimport" and len(p) == 2:
         return await admin_h.question_import_start(update, context, int(p[1]))
+    if head == "qsearch" and len(p) == 2:
+        return await admin_h.question_search_start(update, context, int(p[1]))
 
     # --- AI lug'at / gap-fill ---
     if head == "aivocab" and len(p) == 2:
@@ -287,6 +290,17 @@ async def document_router(update, context):
     await update.message.reply_text("Hozir hujjat qabul qilinmaydi. CSV import uchun admin paneldan foydalaning.")
 
 
+async def cancel_flow(update, context):
+    flow = context.user_data.get("flow")
+    if flow in ("q_search", "q_import_csv"):
+        context.user_data["flow"] = None
+        context.user_data.pop("search_arena_id", None)
+        context.user_data.pop("import_arena_id", None)
+        await update.message.reply_text("❌ Bekor qilindi.")
+        return
+    await update.message.reply_text("Bekor qilinadigan jarayon yo'q.")
+
+
 def main():
     start_health_server()
     db.init_db()
@@ -296,6 +310,7 @@ def main():
 
     application.add_handler(CommandHandler("start", start_h.cmd_start))
     application.add_handler(CommandHandler("login", start_h.login_command))
+    application.add_handler(CommandHandler("cancel", cancel_flow))
     application.add_handler(CommandHandler("cancel_arena", quiz_h.cancel_arena))
     application.add_handler(CallbackQueryHandler(callback_router))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_router))
