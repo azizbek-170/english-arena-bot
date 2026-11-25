@@ -255,6 +255,7 @@ def users_list_keyboard(users, page=0, total_pages=1) -> InlineKeyboardMarkup:
 def user_detail_keyboard(user_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
+            [InlineKeyboardButton("📊 Natijalar", callback_data=cb("uresults", user_id))],
             [InlineKeyboardButton("✏️ Ismni tahrirlash", callback_data=cb("uedit_name", user_id))],
             [InlineKeyboardButton("🔑 Login tahrirlash", callback_data=cb("uedit_login", user_id))],
             [InlineKeyboardButton("🔒 Parol tahrirlash", callback_data=cb("uedit_pass", user_id))],

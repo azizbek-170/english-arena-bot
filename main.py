@@ -247,6 +247,8 @@ async def callback_router(update, context):
         return await admin_h.user_add_start(update, context)
     if head == "udetail" and len(p) == 2:
         return await admin_h.user_detail(update, context, int(p[1]))
+    if head == "uresults" and len(p) == 2:
+        return await admin_h.user_results(update, context, int(p[1]))
     if head == "uedit_name" and len(p) == 2:
         return await admin_h.user_edit_start(update, context, int(p[1]), "name")
     if head == "uedit_login" and len(p) == 2:

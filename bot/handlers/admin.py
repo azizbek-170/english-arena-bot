@@ -685,6 +685,35 @@ async def user_detail(update, context, user_id: int):
     await _edit(update, text, kb.user_detail_keyboard(user_id))
 
 
+async def user_results(update, context, user_id: int):
+    if not _admin(update):
+        return
+    user = db.get_user_by_id(user_id)
+    if not user:
+        await _edit(update, "❌ User topilmadi.", kb.back_button("user_list"))
+        return
+    stats = db.get_user_stats(user_id) or {}
+    rows = db.list_user_results(user_id, limit=10)
+    lines = [
+        f"📊 {user['name']} — natijalar\n",
+        f"Urinishlar: {stats.get('attempts', 0)}",
+        f"O'rtacha: {_fmt_percent(stats.get('avg_percent'))}%",
+        f"Eng yaxshi: {_fmt_percent(stats.get('best_percent'))}%",
+        f"Jami achko: {stats.get('total_score') or 0}",
+    ]
+    if rows:
+        lines.append("\nSo'nggi natijalar:")
+        for r in rows:
+            arena = r.get("arena_title") or "Arena"
+            level = r.get("arena_level") or "-"
+            lines.append(
+                f"• {arena} ({level}) — {r['score']}/{r['max_score']} ({_fmt_percent(r['percentage'])}%) {r['medal']}"
+            )
+    else:
+        lines.append("\nHali natija yo'q.")
+    await _edit(update, "\n".join(lines), kb.back_button(f"udetail:{user_id}"))
+
+
 async def user_edit_start(update, context, user_id: int, field: str):
     flows = {
         "name": "edit_name",
