@@ -487,12 +487,74 @@ def save_result(user_id, arena_id, score, max_score, percentage, medal):
     )
 
 
-def list_user_results(user_id):
+def list_user_results(user_id, limit=10):
     return _fetchall(
         """
-        SELECT r.*, a.title AS arena_title
+        SELECT r.*, a.title AS arena_title, a.level AS arena_level
         FROM results r LEFT JOIN arenas a ON a.id = r.arena_id
-        WHERE r.user_id = %s ORDER BY r.completed_at DESC LIMIT 10
+        WHERE r.user_id = %s ORDER BY r.completed_at DESC LIMIT %s
+        """,
+        (user_id, limit),
+    )
+
+
+def get_leaderboard(limit=10):
+    return _fetchall(
+        """
+        SELECT
+            u.name,
+            COUNT(r.id) AS attempts,
+            ROUND(AVG(r.percentage)::numeric, 1) AS avg_percent,
+            MAX(r.percentage) AS best_percent,
+            SUM(r.score) AS total_score
+        FROM results r
+        JOIN users u ON u.id = r.user_id
+        GROUP BY u.id, u.name
+        ORDER BY avg_percent DESC, best_percent DESC, total_score DESC
+        LIMIT %s
+        """,
+        (limit,),
+    )
+
+
+def get_user_stats(user_id):
+    return _fetchone(
+        """
+        SELECT
+            COUNT(*) AS attempts,
+            ROUND(AVG(percentage)::numeric, 1) AS avg_percent,
+            MAX(percentage) AS best_percent,
+            SUM(score) AS total_score
+        FROM results
+        WHERE user_id = %s
         """,
         (user_id,),
     )
+
+
+def get_admin_stats():
+    stats = _fetchone(
+        """
+        SELECT
+            (SELECT COUNT(*) FROM users) AS users_count,
+            (SELECT COUNT(*) FROM users WHERE registered = TRUE) AS registered_count,
+            (SELECT COUNT(*) FROM arenas) AS arenas_count,
+            (SELECT COUNT(*) FROM arenas WHERE is_open = TRUE) AS open_arenas_count,
+            (SELECT COUNT(*) FROM questions) AS questions_count,
+            (SELECT COUNT(*) FROM results) AS results_count,
+            (SELECT ROUND(AVG(percentage)::numeric, 1) FROM results) AS avg_percent
+        """
+    ) or {}
+    top_arenas = _fetchall(
+        """
+        SELECT a.title, a.level, COUNT(r.id) AS attempts,
+               ROUND(AVG(r.percentage)::numeric, 1) AS avg_percent
+        FROM results r
+        JOIN arenas a ON a.id = r.arena_id
+        GROUP BY a.id, a.title, a.level
+        ORDER BY attempts DESC, avg_percent DESC
+        LIMIT 5
+        """
+    )
+    stats["top_arenas"] = top_arenas
+    return stats

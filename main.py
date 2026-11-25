@@ -156,6 +156,8 @@ async def callback_router(update, context):
         return await admin_h.arena_manage(update, context)
     if head == "adm_users":
         return await admin_h.users_manage(update, context)
+    if head == "adm_stats":
+        return await admin_h.admin_stats(update, context)
     if head == "arena_manage":
         return await admin_h.arena_manage(update, context)
 
@@ -228,6 +230,10 @@ async def callback_router(update, context):
     # --- Ingliz tili arenasi ---
     if head == "eng_arenas":
         return await quiz_h.show_english_arenas(update, context)
+    if head == "my_results":
+        return await quiz_h.show_my_results(update, context)
+    if head == "leaderboard":
+        return await quiz_h.show_leaderboard(update, context)
     if head == "play" and len(p) == 2:
         return await quiz_h.start_quiz(update, context, int(p[1]))
     if head == "qans" and len(p) == 4:

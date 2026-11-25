@@ -46,6 +46,34 @@ async def users_manage(update, context):
     await _edit(update, "👥 USERLAR BOSHQARUVI", kb.users_manage_menu())
 
 
+def _fmt_percent(value):
+    if value is None:
+        return "0"
+    return f"{float(value):g}"
+
+
+async def admin_stats(update, context):
+    if not _admin(update):
+        return
+    stats = db.get_admin_stats()
+    lines = [
+        "📊 BOT STATISTIKASI\n",
+        f"👥 Userlar: {stats.get('users_count', 0)} (ro'yxatdan o'tgan: {stats.get('registered_count', 0)})",
+        f"🏟 Arenalar: {stats.get('arenas_count', 0)} (ochiq: {stats.get('open_arenas_count', 0)})",
+        f"❓ Savollar: {stats.get('questions_count', 0)}",
+        f"📝 Natijalar: {stats.get('results_count', 0)}",
+        f"📈 O'rtacha foiz: {_fmt_percent(stats.get('avg_percent'))}%",
+    ]
+    top_arenas = stats.get("top_arenas") or []
+    if top_arenas:
+        lines.append("\nTop arenalar:")
+        for a in top_arenas:
+            lines.append(
+                f"• {a['title']} ({a['level']}) — {a['attempts']} urinish, o'rtacha {_fmt_percent(a['avg_percent'])}%"
+            )
+    await _edit(update, "\n".join(lines), kb.admin_menu())
+
+
 # =========================================================================== #
 # Arena qo'shish
 # =========================================================================== #

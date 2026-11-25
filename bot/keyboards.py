@@ -44,6 +44,7 @@ def admin_menu() -> InlineKeyboardMarkup:
         [
             [InlineKeyboardButton("🏟 English arena boshqaruvi", callback_data="adm_arenas")],
             [InlineKeyboardButton("👥 Userlar boshqaruvi", callback_data="adm_users")],
+            [InlineKeyboardButton("📊 Statistika", callback_data="adm_stats")],
             [InlineKeyboardButton("⬅️ Asosiy menyu", callback_data="back_main")],
         ]
     )
@@ -95,6 +96,12 @@ def open_arenas_keyboard(arenas) -> InlineKeyboardMarkup:
         ]
         for arena in arenas
     ]
+    rows.append(
+        [
+            InlineKeyboardButton("📊 Natijalarim", callback_data="my_results"),
+            InlineKeyboardButton("🏆 Reyting", callback_data="leaderboard"),
+        ]
+    )
     rows.append([InlineKeyboardButton("⬅️ Asosiy menyu", callback_data="back_main")])
     return InlineKeyboardMarkup(rows)
 

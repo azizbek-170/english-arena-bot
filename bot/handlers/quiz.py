@@ -65,17 +65,16 @@ async def show_english_arenas(update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     arenas = db.list_open_arenas()
-    if not arenas:
-        text = "📭 Hozircha ochiq arena yo'q. Admin arenani ochishini kuting."
-        markup = None
+    text = (
+        "🎯 INGLIZ TILI ARENASI\n\n"
+        "Darajangizga mos arenani tanlang.\n"
+        "Eslatma: xato javob berilsa achko yo'q; ketma-ket 3 xatoda -1, 5 xatoda yana -2 achko.\n\n"
+    )
+    if arenas:
+        text += "Arenani tanlang:"
     else:
-        text = (
-            "🎯 INGLIZ TILI ARENASI\n\n"
-            "Darajangizga mos arenani tanlang.\n"
-            f"Eslatma: xato javob berilsa achko yo'q; ketma-ket 3 xatoda -1, 5 xatoda yana -2 achko.\n\n"
-            "Arenani tanlang:"
-        )
-        markup = kb.open_arenas_keyboard(arenas)
+        text += "📭 Hozircha ochiq arena yo'q. Admin arenani ochishini kuting."
+    markup = kb.open_arenas_keyboard(arenas)
 
     if update.callback_query:
         await safe_edit(update.callback_query, text, markup)
@@ -326,3 +325,56 @@ async def warn_in_arena(update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Siz arenadasiz, chiqish uchun /cancel_arena tugmasini bosing."
     )
+
+
+def _format_percent(value):
+    if value is None:
+        return "0"
+    return f"{float(value):g}"
+
+
+async def show_my_results(update, context: ContextTypes.DEFAULT_TYPE):
+    user = db.get_user_by_telegram(update.effective_user.id)
+    if not user:
+        await safe_edit(update.callback_query, "❌ Avval /start bosing.", kb.back_button("eng_arenas"))
+        return
+
+    stats = db.get_user_stats(user["id"]) or {}
+    results = db.list_user_results(user["id"], limit=10)
+    if not results:
+        text = "📊 Natijalarim\n\nHali natija yo'q. Arenada test topshiring."
+    else:
+        lines = [
+            "📊 Natijalarim\n",
+            f"Urinishlar: {stats.get('attempts', 0)}",
+            f"O'rtacha: {_format_percent(stats.get('avg_percent'))}%",
+            f"Eng yaxshi: {_format_percent(stats.get('best_percent'))}%",
+            f"Jami achko: {stats.get('total_score') or 0}",
+            "\nSo'nggi natijalar:",
+        ]
+        for r in results:
+            arena = r.get("arena_title") or "Arena"
+            level = r.get("arena_level") or "-"
+            lines.append(
+                f"• {arena} ({level}) — {r['score']}/{r['max_score']} ({_format_percent(r['percentage'])}%) {r['medal']}"
+            )
+        text = "\n".join(lines)
+
+    await safe_edit(update.callback_query, text, kb.back_button("eng_arenas"))
+
+
+async def show_leaderboard(update, context: ContextTypes.DEFAULT_TYPE):
+    rows = db.get_leaderboard(limit=10)
+    if not rows:
+        text = "🏆 Reyting\n\nHali natijalar yo'q."
+    else:
+        lines = ["🏆 Reyting (top 10)\n"]
+        for i, row in enumerate(rows, 1):
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            lines.append(
+                f"{medal} {row['name']} — o'rtacha {_format_percent(row['avg_percent'])}% | "
+                f"eng yaxshi {_format_percent(row['best_percent'])}% | urinish {row['attempts']}"
+            )
+        text = "\n".join(lines)
+
+    await safe_edit(update.callback_query, text, kb.back_button("eng_arenas"))

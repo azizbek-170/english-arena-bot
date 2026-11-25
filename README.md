@@ -101,7 +101,7 @@ psql -U postgres -d quiz_bot -f schema.sql
 
 ### Admin
 1. `/start` → sizda faqat **Ingiliz tili arenasi** va **Admin panel** tugmalari chiqadi.
-2. **Admin panel** → **English arena boshqaruvi** / **Userlar boshqaruvi**.
+2. **Admin panel** → **English arena boshqaruvi** / **Userlar boshqaruvi** / **Statistika**.
 
 **English arena boshqaruvi**
 - Arena qo'shish: nomi → tavsif → daraja (A1…C2).
@@ -122,12 +122,18 @@ psql -U postgres -d quiz_bot -f schema.sql
 - Yangi user qo'shish (ism + login + parol) **ixtiyoriy** — ommaviy foydalanuvchilarga login/parol tarqatish shart emas.
 - Bunday login/parol faqat eski usulda kirish uchun (`/login` yoki **🔑 Login bilan kirish** tugmasi).
 
+**Statistika**
+- Userlar, arenalar, savollar, natijalar soni.
+- O'rtacha foiz va eng faol arenalar.
+
 ### Ishtirokchi (ommaviy kirish)
 1. `/start` bosish kifoya — bot Telegram ID bo'yicha **avtomatik ro'yxatdan o'tkazadi**. Login va parol kerak emas.
 2. **Ingiliz tili arenasi** → ochiq arenalar → arenani tanlash.
-3. Savol boshlanadi. Boshqa narsa yozib yuborsangiz:
+3. **📊 Natijalarim** — oxirgi 10 ta natija va umumiy statistika.
+4. **🏆 Reyting** — top 10 o'quvchi.
+5. Savol boshlanadi. Boshqa narsa yozib yuborsangiz:
    `Siz arenadasiz, chiqish uchun /cancel_arena tugmasini bosing.`
-4. Chiqish: `/cancel_arena`.
+6. Chiqish: `/cancel_arena`.
 
 > Admin bergan login/parol bilan kirish kerak bo'lsa: `/login` buyrug'i yoki **🔑 Login bilan kirish** tugmasi. Avtomatik ro'yxatdan o'tish hech kimga xalaqit bermaydi: oldin ro'yxatdan o'tgan userlar o'z hisobi bilan qoladi.
 
