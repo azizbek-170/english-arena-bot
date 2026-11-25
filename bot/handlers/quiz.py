@@ -148,12 +148,16 @@ async def send_question(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
     qtype = q.get("question_type")
     is_gap = qtype == "gap"
     is_idiom = qtype == "idiom"
+    is_definition = qtype == "definition"
     if is_idiom:
         body = f"💬 Idiom ma'nosini toping:\n{q['uz_word']}"
         action = "1-qism: idiom ma'nosini tanlang (a, b, c, d):"
     elif is_gap:
         body = f"✏️ Gapni to'ldiring:\n{q['uz_word']}"
         action = "1-qism: nuqtalar o'rniga keladigan so'zni tanlang:"
+    elif is_definition:
+        body = f"📘 Ta'rifga mos so'zni toping:\n{q['uz_word']}"
+        action = "1-qism: to'g'ri so'zni tanlang (a, b, c, d):"
     else:
         body = f"🔤 O'zbekcha so'z: {q['uz_word']}"
         action = "1-qism: inglizcha variantni tanlang (a, b, c, d):"
@@ -229,6 +233,8 @@ async def answer_mcq(update, context: ContextTypes.DEFAULT_TYPE, arena_id, quest
         typing_hint = f"2-qism: «{q['en_word']}» idiomasini o'zingiz yozing:"
     elif qtype == "gap":
         typing_hint = f"2-qism: «{q['uz_word']}» gapidagi to'g'ri so'zni yozing:"
+    elif qtype == "definition":
+        typing_hint = f"2-qism: ta'rifga mos so'zni o'zingiz yozing:\n{q['uz_word']}"
     else:
         typing_hint = f"2-qism: «{q['uz_word']}» so'zining inglizchasini o'zingiz yozing:"
     logger.info("1-QISM javobi: %s, jami ball=%s, ketma-ket xato=%s", letter, quiz["score"], quiz["streak"])

@@ -241,6 +241,18 @@ async def callback_router(update, context):
     if head == "aidlvl" and len(p) == 3:
         return await admin_h.ai_vocab_apply(update, context, int(p[1]), p[2], "idiom")
 
+    # --- Kitobdan qo'shish ---
+    if head == "booksrc" and len(p) == 2:
+        return await admin_h.book_source_start(update, context, int(p[1]))
+    if head == "book" and len(p) == 3:
+        return await admin_h.book_units(update, context, p[1], int(p[2]))
+    if head == "bookup" and len(p) == 4:
+        return await admin_h.book_units(update, context, p[1], int(p[2]), page=int(p[3]))
+    if head == "booku" and len(p) == 4:
+        return await admin_h.book_unit_types(update, context, p[1], int(p[2]), int(p[3]))
+    if head == "bookq" and len(p) == 5:
+        return await admin_h.book_apply(update, context, p[1], int(p[2]), p[3], int(p[4]))
+
     # --- Userlar ---
     if head == "user_list" and len(p) == 1:
         return await admin_h.users_list(update, context)

@@ -115,10 +115,13 @@ def arena_detail_keyboard(arena) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(status_text, callback_data=cb("atoggle", aid))],
             [
                 InlineKeyboardButton("➕ Savol qo'shish", callback_data=cb("qadd", aid)),
-                InlineKeyboardButton("🤖 AI lug'at qo'shish", callback_data=cb("aivocab", aid)),
+                InlineKeyboardButton("📚 Kitobdan qo'shish", callback_data=cb("booksrc", aid)),
             ],
-            [InlineKeyboardButton("🤖 AI gap-fill qo'shish", callback_data=cb("aigap", aid))],
-            [InlineKeyboardButton("🤖 AI idiom qo'shish", callback_data=cb("aiidiom", aid))],
+            [
+                InlineKeyboardButton("🤖 AI lug'at", callback_data=cb("aivocab", aid)),
+                InlineKeyboardButton("🤖 AI gap-fill", callback_data=cb("aigap", aid)),
+                InlineKeyboardButton("🤖 AI idiom", callback_data=cb("aiidiom", aid)),
+            ],
             [
                 InlineKeyboardButton("📋 Savollar ro'yxati", callback_data=cb("qlist", aid)),
                 InlineKeyboardButton("🗑 Savol o'chirish", callback_data=cb("qdelmode", aid)),
@@ -137,7 +140,8 @@ def arena_detail_keyboard(arena) -> InlineKeyboardMarkup:
 def question_type_keyboard(arena_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("📖 Lug'at so'zi (O'zbekcha → Inglizcha)", callback_data=cb("qtype", "vocab", arena_id))],
+            [InlineKeyboardButton("📖 Lug'at (O'zbekcha → Inglizcha)", callback_data=cb("qtype", "vocab", arena_id))],
+            [InlineKeyboardButton("📘 Definition → Word", callback_data=cb("qtype", "definition", arena_id))],
             [InlineKeyboardButton("✏️ Gap to'ldirish (gap filling)", callback_data=cb("qtype", "gap", arena_id))],
             [InlineKeyboardButton("💬 Idiom (definition + tarjima)", callback_data=cb("qtype", "idiom", arena_id))],
             [InlineKeyboardButton("⬅️ Bekor qilish", callback_data=cb("arena", arena_id))],
@@ -279,4 +283,53 @@ def mcq_keyboard(question, arena_id: int) -> InlineKeyboardMarkup:
             ]
         )
     rows.append([InlineKeyboardButton("❌ Chiqish", callback_data="cancel_arena_cb")])
+    return InlineKeyboardMarkup(rows)
+
+def books_keyboard(books, arena_id: int) -> InlineKeyboardMarkup:
+    rows = []
+    for b in books:
+        rows.append([InlineKeyboardButton(f"📚 {b['title']}", callback_data=cb("book", b["id"], arena_id))])
+    rows.append([InlineKeyboardButton("⬅️ Arenaga qaytish", callback_data=cb("arena", arena_id))])
+    return InlineKeyboardMarkup(rows)
+
+
+def book_units_keyboard(book_id: str, units, arena_id: int, page=0, per_page=10) -> InlineKeyboardMarkup:
+    total_pages = max(1, (len(units) + per_page - 1) // per_page)
+    page = max(0, min(page, total_pages - 1))
+    start = page * per_page
+    chunk = units[start:start + per_page]
+    rows = []
+    row = []
+    for u in chunk:
+        row.append(InlineKeyboardButton(f"Unit {u['unit']}", callback_data=cb("booku", book_id, u["unit"], arena_id)))
+        if len(row) == 5:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    if total_pages > 1:
+        nav = []
+        if page > 0:
+            nav.append(InlineKeyboardButton("⬅️", callback_data=cb("bookup", book_id, arena_id, page - 1)))
+        nav.append(InlineKeyboardButton(f"{page + 1}/{total_pages}", callback_data="noop"))
+        if page < total_pages - 1:
+            nav.append(InlineKeyboardButton("➡️", callback_data=cb("bookup", book_id, arena_id, page + 1)))
+        rows.append(nav)
+    rows.append([InlineKeyboardButton("⬅️ Kitoblar", callback_data=cb("booksrc", arena_id))])
+    return InlineKeyboardMarkup(rows)
+
+
+def book_qtype_keyboard(book_id: str, unit: int, arena_id: int, available_types) -> InlineKeyboardMarkup:
+    labels = {
+        "vocab": "📖 Vocab (so'z → inglizcha)",
+        "definition": "📘 Definition → Word",
+        "gap": "✏️ Gap filling (misoldan)",
+    }
+    rows = []
+    for qt in ("vocab", "definition", "gap"):
+        if qt in available_types:
+            rows.append([InlineKeyboardButton(labels[qt], callback_data=cb("bookq", book_id, unit, qt, arena_id))])
+    if not rows:
+        rows.append([InlineKeyboardButton("❌ Bu unit uchun mos savol turi yo'q", callback_data="noop")])
+    rows.append([InlineKeyboardButton("⬅️ Unitlar", callback_data=cb("book", book_id, arena_id))])
     return InlineKeyboardMarkup(rows)

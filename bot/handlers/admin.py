@@ -25,12 +25,12 @@ async def _edit(update, text: str, markup: InlineKeyboardMarkup = None):
 # =========================================================================== #
 async def admin_menu(update, context):
     if not _admin(update):
-        await _edit(update, "⛔ Bu bo'lim faqat admin uchun.")
+        await _edit(update, "в›” Bu bo'lim faqat admin uchun.")
         return
     context.user_data["flow"] = None
     await _edit(
         update,
-        "👑 ADMIN PANEL\n\nBoshqaruv bo'limini tanlang:",
+        "рџ‘‘ ADMIN PANEL\n\nBoshqaruv bo'limini tanlang:",
         kb.admin_menu(),
     )
 
@@ -39,14 +39,14 @@ async def arena_manage(update, context):
     if not _admin(update):
         return
     context.user_data["flow"] = None
-    await _edit(update, "🏟 ENGLISH ARENA BOSHQARUVI", kb.arena_manage_menu())
+    await _edit(update, "рџЏџ ENGLISH ARENA BOSHQARUVI", kb.arena_manage_menu())
 
 
 async def users_manage(update, context):
     if not _admin(update):
         return
     context.user_data["flow"] = None
-    await _edit(update, "👥 USERLAR BOSHQARUVI", kb.users_manage_menu())
+    await _edit(update, "рџ‘Ґ USERLAR BOSHQARUVI", kb.users_manage_menu())
 
 
 def _fmt_percent(value):
@@ -60,26 +60,26 @@ async def admin_stats(update, context):
         return
     stats = db.get_admin_stats()
     lines = [
-        "📊 BOT STATISTIKASI\n",
-        f"👥 Userlar: {stats.get('users_count', 0)} (ro'yxatdan o'tgan: {stats.get('registered_count', 0)})",
-        f"🏟 Arenalar: {stats.get('arenas_count', 0)} (ochiq: {stats.get('open_arenas_count', 0)})",
-        f"❓ Savollar: {stats.get('questions_count', 0)}",
-        f"📝 Natijalar: {stats.get('results_count', 0)}",
-        f"📈 O'rtacha foiz: {_fmt_percent(stats.get('avg_percent'))}%",
+        "рџ“Љ BOT STATISTIKASI\n",
+        f"рџ‘Ґ Userlar: {stats.get('users_count', 0)} (ro'yxatdan o'tgan: {stats.get('registered_count', 0)})",
+        f"рџЏџ Arenalar: {stats.get('arenas_count', 0)} (ochiq: {stats.get('open_arenas_count', 0)})",
+        f"вќ“ Savollar: {stats.get('questions_count', 0)}",
+        f"рџ“ќ Natijalar: {stats.get('results_count', 0)}",
+        f"рџ“€ O'rtacha foiz: {_fmt_percent(stats.get('avg_percent'))}%",
     ]
     top_arenas = stats.get("top_arenas") or []
     if top_arenas:
         lines.append("\nTop arenalar:")
         for a in top_arenas:
             lines.append(
-                f"• {a['title']} ({a['level']}) — {a['attempts']} urinish, o'rtacha {_fmt_percent(a['avg_percent'])}%"
+                f"вЂў {a['title']} ({a['level']}) вЂ” {a['attempts']} urinish, o'rtacha {_fmt_percent(a['avg_percent'])}%"
             )
     hardest = stats.get("hardest_questions") or []
     if hardest:
         lines.append("\nEng qiyin savollar:")
         for q in hardest:
             lines.append(
-                f"• {q['uz_word']} → {q['en_word']} ({q.get('arena_title','-')}) — "
+                f"вЂў {q['uz_word']} в†’ {q['en_word']} ({q.get('arena_title','-')}) вЂ” "
                 f"xato {_fmt_percent(q.get('wrong_percent'))}% ({q.get('wrong_count',0)}/{q.get('attempt_count',0)})"
             )
     await _edit(update, "\n".join(lines), kb.admin_menu())
@@ -90,7 +90,7 @@ async def admin_export_results(update, context):
         return
     rows = db.list_all_results()
     if not rows:
-        await _edit(update, "❌ Hali natijalar yo'q.", kb.admin_menu())
+        await _edit(update, "вќЊ Hali natijalar yo'q.", kb.admin_menu())
         return
 
     output = io.StringIO()
@@ -104,9 +104,9 @@ async def admin_export_results(update, context):
     await update.callback_query.message.reply_document(
         document=data,
         filename="results_export.csv",
-        caption=f"📥 Natijalar eksporti: {len(rows)} ta",
+        caption=f"рџ“Ґ Natijalar eksporti: {len(rows)} ta",
     )
-    await _edit(update, f"✅ Natijalar CSV tayyor: {len(rows)} ta.", kb.admin_menu())
+    await _edit(update, f"вњ… Natijalar CSV tayyor: {len(rows)} ta.", kb.admin_menu())
 
 
 # =========================================================================== #
@@ -139,7 +139,7 @@ async def arena_level_callback(update, context, level: str):
     context.user_data.pop("new_arena", None)
     await _edit(
         update,
-        f"✅ Arena yaratildi:\n\n🏟 {arena['title']}\n📝 {arena['description']}\n🎚 Daraja: {arena['level']}",
+        f"вњ… Arena yaratildi:\n\nрџЏџ {arena['title']}\nрџ“ќ {arena['description']}\nрџЋљ Daraja: {arena['level']}",
         kb.arena_detail_keyboard(arena),
     )
 
@@ -149,23 +149,23 @@ async def arena_level_callback(update, context, level: str):
 # =========================================================================== #
 async def arenas_list(update, context):
     arenas = db.list_arenas()
-    text = "📋 ARENALAR RO'YXATI\n\n" if arenas else "📋 Hali arena yo'q."
+    text = "рџ“‹ ARENALAR RO'YXATI\n\n" if arenas else "рџ“‹ Hali arena yo'q."
     await _edit(update, text + "Arenani tanlang:", kb.arenas_list_keyboard(arenas))
 
 
 async def arena_detail(update, context, arena_id: int):
     arena = db.get_arena(arena_id)
     if not arena:
-        await _edit(update, "❌ Arena topilmadi.", kb.back_button("arena_list"))
+        await _edit(update, "вќЊ Arena topilmadi.", kb.back_button("arena_list"))
         return
     count = len(db.list_questions(arena_id))
-    status = "🟢 OCHIQ" if arena["is_open"] else "🔴 YOPIQ"
+    status = "рџџў OCHIQ" if arena["is_open"] else "рџ”ґ YOPIQ"
     text = (
-        f"🏟 {arena['title']}\n"
-        f"📝 {arena['description']}\n"
-        f"🎚 Daraja: {arena['level']} ({db_level_points(arena['level'])} achko/savol)\n"
-        f"📊 Holat: {status}\n"
-        f"❓ Savollar soni: {count}"
+        f"рџЏџ {arena['title']}\n"
+        f"рџ“ќ {arena['description']}\n"
+        f"рџЋљ Daraja: {arena['level']} ({db_level_points(arena['level'])} achko/savol)\n"
+        f"рџ“Љ Holat: {status}\n"
+        f"вќ“ Savollar soni: {count}"
     )
     await _edit(update, text, kb.arena_detail_keyboard(arena))
 
@@ -186,7 +186,7 @@ async def arena_delete_confirm(update, context, arena_id: int):
 
     await _edit(
         update,
-        "❗ Arenani o'chirishni tasdiqlaysizmi? Unga tegishli barcha savollar ham o'chadi.",
+        "вќ— Arenani o'chirishni tasdiqlaysizmi? Unga tegishli barcha savollar ham o'chadi.",
         confirm_keyboard(f"adel_yes:{arena_id}", "arena_list"),
     )
 
@@ -209,9 +209,10 @@ async def question_type_callback(update, context, qtype: str, arena_id: int):
     context.user_data["new_q"] = {"arena_id": arena_id, "qtype": qtype}
     context.user_data["flow"] = "q_uz"
     prompts = {
-        "vocab": "✏️ O'zbekcha so'zni kiriting:",
+        "vocab": "📖 O'zbekcha so'zni kiriting:",
+        "definition": "📘 Inglizcha ta'rifni kiriting:",
         "gap": "✏️ Nuqtali gapni yozing (masalan: I ___ to school.):",
-        "idiom": "✏️ Idiomni kiriting (masalan: At all costs):",
+        "idiom": "💬 Idiomni kiriting (masalan: At all costs):",
     }
     await _edit(update, prompts.get(qtype, prompts["vocab"]))
 
@@ -222,6 +223,7 @@ async def q_uz_text(update, context):
     qtype = context.user_data["new_q"].get("qtype", "vocab")
     prompts = {
         "vocab": "Inglizcha to'g'ri javobni kiriting:",
+        "definition": "Ta'rifga mos inglizcha so'zni kiriting:",
         "gap": "Nuqta o'rniga keladigan so'zni kiriting:",
         "idiom": "Idiom o'zini kiriting (typing bosqichi uchun):",
     }
@@ -229,7 +231,12 @@ async def q_uz_text(update, context):
 
 
 def _option_prompt(qtype: str, letter: str) -> str:
-    suffix = " (ma'no/definition)" if qtype == "idiom" else ""
+    if qtype == "idiom":
+        suffix = " (ma'no/definition)"
+    elif qtype == "definition":
+        suffix = " (so'z)"
+    else:
+        suffix = ""
     return f"{letter} variantni kiriting{suffix}:"
 
 
@@ -273,7 +280,7 @@ async def question_correct_callback(update, context, letter: str):
     data = context.user_data.get("new_q", {})
     arena_id = data.get("arena_id")
     if not arena_id:
-        await _edit(update, "❌ Savol qo'shish jarayoni tugagan.", kb.back_button("arena_list"))
+        await _edit(update, "вќЊ Savol qo'shish jarayoni tugagan.", kb.back_button("arena_list"))
         return
     db.add_question(
         arena_id,
@@ -296,7 +303,7 @@ async def questions_list(update, context, arena_id: int, delete_mode=False, page
     if not questions:
         await _edit(
             update,
-            "❌ Bu arenada savol yo'q.",
+            "вќЊ Bu arenada savol yo'q.",
             kb.back_button(f"arena:{arena_id}"),
         )
         return
@@ -305,7 +312,7 @@ async def questions_list(update, context, arena_id: int, delete_mode=False, page
     page = max(0, min(page, total_pages - 1))
     start = page * per_page
     chunk = questions[start:start + per_page]
-    title = "🗑 SAVOL O'CHIRISH" if delete_mode else "📋 SAVOLLAR RO'YXATI"
+    title = "рџ—‘ SAVOL O'CHIRISH" if delete_mode else "рџ“‹ SAVOLLAR RO'YXATI"
     arena = db.get_arena(arena_id)
     arena_title = arena["title"] if arena else "Arena"
     text = (
@@ -322,7 +329,7 @@ async def question_search_start(update, context, arena_id: int):
         return
     context.user_data["flow"] = "q_search"
     context.user_data["search_arena_id"] = arena_id
-    await _edit(update, "🔍 Qidirish uchun so'z yoki ibora yozing:\n\nBekor qilish uchun /cancel yozing.")
+    await _edit(update, "рџ”Ќ Qidirish uchun so'z yoki ibora yozing:\n\nBekor qilish uchun /cancel yozing.")
 
 
 async def q_search_text(update, context):
@@ -333,21 +340,21 @@ async def q_search_text(update, context):
     if query.lower() in ("/cancel", "bekor"):
         context.user_data["flow"] = None
         context.user_data.pop("search_arena_id", None)
-        await update.message.reply_text("❌ Qidiruv bekor qilindi.")
+        await update.message.reply_text("вќЊ Qidiruv bekor qilindi.")
         return
     if not arena_id or not query:
-        await update.message.reply_text("❌ Qidiruv so'zini kiriting.")
+        await update.message.reply_text("вќЊ Qidiruv so'zini kiriting.")
         return
     results = db.search_questions(arena_id, query, limit=20)
     context.user_data["flow"] = None
     context.user_data.pop("search_arena_id", None)
     if not results:
         await update.message.reply_text(
-            f"🔍 \"{query}\" bo'yicha hech narsa topilmadi.",
+            f"рџ”Ќ \"{query}\" bo'yicha hech narsa topilmadi.",
             reply_markup=kb.back_button(f"arena:{arena_id}"),
         )
         return
-    text = f"🔍 \"{query}\" bo'yicha natijalar: {len(results)} ta\n\nSavolni tanlang:"
+    text = f"рџ”Ќ \"{query}\" bo'yicha natijalar: {len(results)} ta\n\nSavolni tanlang:"
     await update.message.reply_text(
         text,
         reply_markup=kb.questions_keyboard(results, arena_id, delete_mode=False),
@@ -357,30 +364,31 @@ async def q_search_text(update, context):
 async def question_info(update, context, question_id: int, arena_id: int):
     q = db.get_question(question_id)
     if not q:
-        await _edit(update, "❌ Savol topilmadi.", kb.back_button(f"arena:{arena_id}"))
+        await _edit(update, "вќЊ Savol topilmadi.", kb.back_button(f"arena:{arena_id}"))
         return
     qtype = q.get("question_type", "vocab")
     labels = {
         "gap": ("Gap to'ldirish (gap filling)", "Gap"),
+        "definition": ("Definition → Word", "Ta'rif"),
         "idiom": ("Idiom (definition + tarjima)", "Idiom"),
     }
     qtype_label, word_label = labels.get(qtype, ("Lug'at so'zi", "O'zbekcha"))
     text = (
-        f"❓ Savol #{q['id']}\n"
-        f"🏷 Turi: {qtype_label}\n\n"
+        f"вќ“ Savol #{q['id']}\n"
+        f"рџЏ· Turi: {qtype_label}\n\n"
         f"{word_label}: {q['uz_word']}\n"
         f"To'g'ri javob: {q['en_word']}\n\n"
         f"a) {q['opt_a']}\n"
         f"b) {q['opt_b']}\n"
         f"c) {q['opt_c']}\n"
         f"d) {q['opt_d']}\n\n"
-        f"✅ To'g'ri variant: {q['correct'].upper()}"
+        f"вњ… To'g'ri variant: {q['correct'].upper()}"
     )
     if qtype == "idiom":
         info = get_idiom_info(q["en_word"]) or {}
         text += (
-            f"\n\n📖 Definition: {info.get('definition', '-')}"
-            f"\n🇺🇿 Tarjima: {info.get('uzbek', '-')}"
+            f"\n\nрџ“– Definition: {info.get('definition', '-')}"
+            f"\nрџ‡єрџ‡ї Tarjima: {info.get('uzbek', '-')}"
         )
     await _edit(update, text, kb.question_info_keyboard(question_id, arena_id))
 
@@ -407,11 +415,11 @@ _EDIT_FIELD_MAP = {
 async def question_edit_menu(update, context, question_id: int, arena_id: int):
     q = db.get_question(question_id)
     if not q:
-        await _edit(update, "❌ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
+        await _edit(update, "вќЊ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
         return
     await _edit(
         update,
-        f"✏️ SAVOLNI TAHRIRLASH\n\n{q['uz_word']} → {q['en_word']}\n\nQaysi maydonni o'zgartirasiz?",
+        f"вњЏпёЏ SAVOLNI TAHRIRLASH\n\n{q['uz_word']} в†’ {q['en_word']}\n\nQaysi maydonni o'zgartirasiz?",
         kb.question_edit_keyboard(question_id, arena_id),
     )
 
@@ -419,7 +427,7 @@ async def question_edit_menu(update, context, question_id: int, arena_id: int):
 async def question_edit_field_start(update, context, question_id: int, arena_id: int, field: str):
     q = db.get_question(question_id)
     if not q:
-        await _edit(update, "❌ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
+        await _edit(update, "вќЊ Savol topilmadi.", kb.back_button(f"qlist:{arena_id}"))
         return
     if field == "correct":
         await _edit(
@@ -435,11 +443,13 @@ async def question_edit_field_start(update, context, question_id: int, arena_id:
     prompts = {
         "uz": {
             "vocab": "Yangi o'zbekcha so'zni kiriting:",
+            "definition": "Yangi inglizcha ta'rifni kiriting:",
             "gap": "Yangi nuqtali gapni kiriting:",
             "idiom": "Yangi idiomni kiriting:",
         },
         "en": {
             "vocab": "Yangi inglizcha javobni kiriting:",
+            "definition": "Yangi inglizcha so'zni kiriting:",
             "gap": "Yangi nuqta o'rniga keladigan so'zni kiriting:",
             "idiom": "Yangi idiom so'zini kiriting (typing bosqichi uchun):",
         },
@@ -459,37 +469,37 @@ async def qe_text(update, context):
     qid, aid, field = data.get("question_id"), data.get("arena_id"), data.get("field")
     if not qid or not field:
         context.user_data["flow"] = None
-        await update.message.reply_text("❌ Tahrirlash jarayoni topilmadi.")
+        await update.message.reply_text("вќЊ Tahrirlash jarayoni topilmadi.")
         return
     db_field = _EDIT_FIELD_MAP.get(field)
     value = (update.message.text or "").strip()
     if not value or not db_field:
-        await update.message.reply_text("❌ Qiymat bo'sh bo'lmasin.")
+        await update.message.reply_text("вќЊ Qiymat bo'sh bo'lmasin.")
         return
     db.update_question(qid, **{db_field: value})
     context.user_data["flow"] = None
     context.user_data.pop("edit_q", None)
-    await update.message.reply_text("✅ Saqlandi.")
+    await update.message.reply_text("вњ… Saqlandi.")
     # show updated question info
     q = db.get_question(qid)
     if not q:
-        await update.message.reply_text("❌ Savol topilmadi.")
+        await update.message.reply_text("вќЊ Savol topilmadi.")
         return
     # reuse question_info rendering by sending a fake update-like message? easier to build text
     text = (
-        f"📋 SAVOL\n\n"
-        f"📝 {q['uz_word']}\n"
-        f"🇬🇧 {q['en_word']}\n\n"
+        f"рџ“‹ SAVOL\n\n"
+        f"рџ“ќ {q['uz_word']}\n"
+        f"рџ‡¬рџ‡§ {q['en_word']}\n\n"
         f"A) {q['opt_a']}\nB) {q['opt_b']}\nC) {q['opt_c']}\nD) {q['opt_d']}\n\n"
-        f"✅ To'g'ri javob: {q['correct'].upper()}\n"
+        f"вњ… To'g'ri javob: {q['correct'].upper()}\n"
         f"Turi: {q.get('question_type', 'vocab')}"
     )
     qtype = q.get("question_type", "vocab")
     if qtype == "idiom":
         info = get_idiom_info(q["en_word"]) or {}
         text += (
-            f"\n\n📖 Definition: {info.get('definition', '-')}"
-            f"\n🇺🇿 Tarjima: {info.get('uzbek', '-')}"
+            f"\n\nрџ“– Definition: {info.get('definition', '-')}"
+            f"\nрџ‡єрџ‡ї Tarjima: {info.get('uzbek', '-')}"
         )
     await update.message.reply_text(text, reply_markup=kb.question_info_keyboard(qid, aid))
 
@@ -505,7 +515,7 @@ async def questions_export(update, context, arena_id: int):
     arena = db.get_arena(arena_id)
     questions = db.list_questions(arena_id)
     if not questions:
-        await _edit(update, "❌ Bu arenada eksport qilish uchun savol yo'q.", kb.back_button(f"arena:{arena_id}"))
+        await _edit(update, "вќЊ Bu arenada eksport qilish uchun savol yo'q.", kb.back_button(f"arena:{arena_id}"))
         return
 
     output = io.StringIO()
@@ -517,9 +527,9 @@ async def questions_export(update, context, arena_id: int):
 
     data = io.BytesIO(output.getvalue().encode("utf-8-sig"))
     name = f"arena_{arena_id}_questions.csv"
-    caption = f"📤 {arena['title'] if arena else 'Arena'} — {len(questions)} ta savol"
+    caption = f"рџ“¤ {arena['title'] if arena else 'Arena'} вЂ” {len(questions)} ta savol"
     await update.callback_query.message.reply_document(document=data, filename=name, caption=caption)
-    await _edit(update, f"✅ CSV eksport tayyor: {len(questions)} ta savol.", kb.back_button(f"arena:{arena_id}"))
+    await _edit(update, f"вњ… CSV eksport tayyor: {len(questions)} ta savol.", kb.back_button(f"arena:{arena_id}"))
 
 
 async def question_import_start(update, context, arena_id: int):
@@ -529,7 +539,7 @@ async def question_import_start(update, context, arena_id: int):
     context.user_data["import_arena_id"] = arena_id
     await _edit(
         update,
-        "📥 CSV IMPORT\n\n"
+        "рџ“Ґ CSV IMPORT\n\n"
         "CSV fayl yuboring. Ustunlar:\n"
         "uz_word,en_word,opt_a,opt_b,opt_c,opt_d,correct,question_type\n\n"
         "correct: a/b/c/d\n"
@@ -546,10 +556,10 @@ async def question_import_document(update, context):
     arena_id = context.user_data.get("import_arena_id")
     doc = update.message.document
     if not doc:
-        await update.message.reply_text("❌ CSV fayl yuboring.")
+        await update.message.reply_text("вќЊ CSV fayl yuboring.")
         return
     if not (doc.file_name or "").lower().endswith(".csv"):
-        await update.message.reply_text("❌ Faqat .csv fayl yuboring.")
+        await update.message.reply_text("вќЊ Faqat .csv fayl yuboring.")
         return
 
     tg_file = await doc.get_file()
@@ -560,7 +570,7 @@ async def question_import_document(update, context):
     fields = set(reader.fieldnames or [])
     if not required.issubset(fields):
         await update.message.reply_text(
-            "❌ CSV ustunlari noto'g'ri. Kerak: uz_word,en_word,opt_a,opt_b,opt_c,opt_d,correct,question_type"
+            "вќЊ CSV ustunlari noto'g'ri. Kerak: uz_word,en_word,opt_a,opt_b,opt_c,opt_d,correct,question_type"
         )
         return
 
@@ -575,7 +585,7 @@ async def question_import_document(update, context):
         if not uz or not en or not all(opts) or correct not in "abcd":
             skipped += 1
             continue
-        if qtype not in {"vocab", "gap", "idiom"}:
+        if qtype not in {"vocab", "gap", "idiom", "definition"}:
             qtype = "vocab"
         db.add_question(arena_id, uz, en, *opts, correct, qtype)
         added += 1
@@ -583,11 +593,11 @@ async def question_import_document(update, context):
     context.user_data["flow"] = None
     context.user_data.pop("import_arena_id", None)
     arena = db.get_arena(arena_id) if arena_id else None
-    msg = f"✅ Import tugadi. Qo'shildi: {added} ta"
+    msg = f"вњ… Import tugadi. Qo'shildi: {added} ta"
     if skipped:
         msg += f", o'tkazildi: {skipped} ta"
     if arena:
-        msg += f"\n\n🏟 {arena['title']}\n❓ Jami savollar: {len(db.list_questions(arena_id))}"
+        msg += f"\n\nрџЏџ {arena['title']}\nвќ“ Jami savollar: {len(db.list_questions(arena_id))}"
         await update.message.reply_text(msg, reply_markup=kb.arena_detail_keyboard(arena))
     else:
         await update.message.reply_text(msg)
@@ -597,9 +607,9 @@ async def question_import_document(update, context):
 # AI orqali lug'at qo'shish
 # =========================================================================== #
 AI_LABELS = {
-    "vocab": ("avlvl", "🤖 AI lug'at qo'shish", "lug'at"),
-    "gap": ("agvlvl", "🤖 AI gap-fill qo'shish", "gap-fill"),
-    "idiom": ("aidlvl", "🤖 AI idiom qo'shish", "idiom"),
+    "vocab": ("avlvl", "рџ¤– AI lug'at qo'shish", "lug'at"),
+    "gap": ("agvlvl", "рџ¤– AI gap-fill qo'shish", "gap-fill"),
+    "idiom": ("aidlvl", "рџ¤– AI idiom qo'shish", "idiom"),
 }
 
 
@@ -635,11 +645,11 @@ async def ai_vocab_apply(update, context, arena_id: int, level: str, qtype: str 
     context.user_data.pop("new_q", None)
     arena = db.get_arena(arena_id)
     _, _, label = AI_LABELS.get(qtype, AI_LABELS["vocab"])
-    extra = "\n💬 To'g'ri idiom javobi har bosqichda 3 achko beradi." if qtype == "idiom" else ""
+    extra = "\nрџ’¬ To'g'ri idiom javobi har bosqichda 3 achko beradi." if qtype == "idiom" else ""
     await _edit(
         update,
-        f"✅ {level} darajasi uchun {added} ta {label} savoli qo'shildi.{extra}\n\n"
-        f"🏟 {arena['title']}\n❓ Jami savollar: {len(db.list_questions(arena_id))}",
+        f"вњ… {level} darajasi uchun {added} ta {label} savoli qo'shildi.{extra}\n\n"
+        f"рџЏџ {arena['title']}\nвќ“ Jami savollar: {len(db.list_questions(arena_id))}",
         kb.arena_detail_keyboard(arena),
     )
 
@@ -650,14 +660,14 @@ async def ai_vocab_apply(update, context, arena_id: int, level: str, qtype: str 
 async def users_list(update, context, page=0):
     users = db.list_users()
     if not users:
-        await _edit(update, "👥 Hali user yo'q.", kb.users_list_keyboard([]))
+        await _edit(update, "рџ‘Ґ Hali user yo'q.", kb.users_list_keyboard([]))
         return
     per_page = 10
     total_pages = max(1, (len(users) + per_page - 1) // per_page)
     page = max(0, min(page, total_pages - 1))
     start = page * per_page
     chunk = users[start:start + per_page]
-    text = f"👥 USERLAR RO'YXATI\nJami: {len(users)} ta | Sahifa: {page + 1}/{total_pages}\n\nUser yoki amalni tanlang:"
+    text = f"рџ‘Ґ USERLAR RO'YXATI\nJami: {len(users)} ta | Sahifa: {page + 1}/{total_pages}\n\nUser yoki amalni tanlang:"
     await _edit(update, text, kb.users_list_keyboard(chunk, page, total_pages))
 
 
@@ -676,7 +686,7 @@ async def u_name_text(update, context):
 async def u_login_text(update, context):
     login = update.message.text.strip()
     if db.get_user_by_login(login):
-        await update.message.reply_text("❌ Bunday login bor. Boshqa login kiriting:")
+        await update.message.reply_text("вќЊ Bunday login bor. Boshqa login kiriting:")
         return
     context.user_data["new_user"]["login"] = login
     context.user_data["flow"] = "u_password"
@@ -690,8 +700,8 @@ async def u_password_text(update, context):
     context.user_data["flow"] = None
     context.user_data.pop("new_user", None)
     await update.message.reply_text(
-        f"✅ User yaratildi:\n\n👤 {user['name']}\n🔑 Login: {user['login']}\n"
-        f"🔒 Parol: {password}\n\n"
+        f"вњ… User yaratildi:\n\nрџ‘¤ {user['name']}\nрџ”‘ Login: {user['login']}\n"
+        f"рџ”’ Parol: {password}\n\n"
         "Endi bu login va parol bilan botda ro'yxatdan o'tish mumkin."
     )
     await users_list_from_message(update, context)
@@ -701,7 +711,7 @@ async def users_list_from_message(update, context):
     # Yangi user yaratilgandan keyin ro'yxatni yangi xabar bilan ko'rsatish
     users = db.list_users()
     await update.message.reply_text(
-        "👥 USERLAR RO'YXATI\n\nUser yoki amalni tanlang:",
+        "рџ‘Ґ USERLAR RO'YXATI\n\nUser yoki amalni tanlang:",
         reply_markup=kb.users_list_keyboard(users),
     )
 
@@ -709,15 +719,15 @@ async def users_list_from_message(update, context):
 async def user_detail(update, context, user_id: int):
     user = db.get_user_by_id(user_id)
     if not user:
-        await _edit(update, "❌ User topilmadi.", kb.back_button("user_list"))
+        await _edit(update, "вќЊ User topilmadi.", kb.back_button("user_list"))
         return
     status = "ro'yxatdan o'tgan" if user["registered"] else "kutilmoqda"
     text = (
-        f"👤 {user['name']}\n"
-        f"🔑 Login: {user['login']}\n"
-        f"🎚 Rol: {user['role']}\n"
-        f"📊 Holat: {status}\n"
-        f"🆔 Telegram ID: {user['telegram_id'] or '-'}"
+        f"рџ‘¤ {user['name']}\n"
+        f"рџ”‘ Login: {user['login']}\n"
+        f"рџЋљ Rol: {user['role']}\n"
+        f"рџ“Љ Holat: {status}\n"
+        f"рџ†” Telegram ID: {user['telegram_id'] or '-'}"
     )
     await _edit(update, text, kb.user_detail_keyboard(user_id))
 
@@ -727,12 +737,12 @@ async def user_results(update, context, user_id: int):
         return
     user = db.get_user_by_id(user_id)
     if not user:
-        await _edit(update, "❌ User topilmadi.", kb.back_button("user_list"))
+        await _edit(update, "вќЊ User topilmadi.", kb.back_button("user_list"))
         return
     stats = db.get_user_stats(user_id) or {}
     rows = db.list_user_results(user_id, limit=10)
     lines = [
-        f"📊 {user['name']} — natijalar\n",
+        f"рџ“Љ {user['name']} вЂ” natijalar\n",
         f"Urinishlar: {stats.get('attempts', 0)}",
         f"O'rtacha: {_fmt_percent(stats.get('avg_percent'))}%",
         f"Eng yaxshi: {_fmt_percent(stats.get('best_percent'))}%",
@@ -744,7 +754,7 @@ async def user_results(update, context, user_id: int):
             arena = r.get("arena_title") or "Arena"
             level = r.get("arena_level") or "-"
             lines.append(
-                f"• {arena} ({level}) — {r['score']}/{r['max_score']} ({_fmt_percent(r['percentage'])}%) {r['medal']}"
+                f"вЂў {arena} ({level}) вЂ” {r['score']}/{r['max_score']} ({_fmt_percent(r['percentage'])}%) {r['medal']}"
             )
     else:
         lines.append("\nHali natija yo'q.")
@@ -756,11 +766,11 @@ async def user_results_export(update, context, user_id: int):
         return
     user = db.get_user_by_id(user_id)
     if not user:
-        await _edit(update, "❌ User topilmadi.", kb.back_button("user_list"))
+        await _edit(update, "вќЊ User topilmadi.", kb.back_button("user_list"))
         return
     rows = db.list_user_results(user_id, limit=5000)
     if not rows:
-        await _edit(update, "❌ Bu userda natijalar yo'q.", kb.back_button(f"udetail:{user_id}"))
+        await _edit(update, "вќЊ Bu userda natijalar yo'q.", kb.back_button(f"udetail:{user_id}"))
         return
     output = io.StringIO()
     fieldnames = ["completed_at", "arena_title", "arena_level", "score", "max_score", "percentage", "medal"]
@@ -772,9 +782,9 @@ async def user_results_export(update, context, user_id: int):
     await update.callback_query.message.reply_document(
         document=data,
         filename=f"user_{user_id}_results.csv",
-        caption=f"📥 {user['name']} natijalari: {len(rows)} ta",
+        caption=f"рџ“Ґ {user['name']} natijalari: {len(rows)} ta",
     )
-    await _edit(update, f"✅ {user['name']} natijalari CSV tayyor: {len(rows)} ta.", kb.back_button(f"udetail:{user_id}"))
+    await _edit(update, f"вњ… {user['name']} natijalari CSV tayyor: {len(rows)} ta.", kb.back_button(f"udetail:{user_id}"))
 
 
 async def user_edit_start(update, context, user_id: int, field: str):
@@ -804,7 +814,7 @@ async def edit_login_text(update, context):
     login = update.message.text.strip()
     existing = db.get_user_by_login(login)
     if existing and existing["id"] != uid:
-        await update.message.reply_text("❌ Bunday login bor. Boshqa login kiriting:")
+        await update.message.reply_text("вќЊ Bunday login bor. Boshqa login kiriting:")
         return
     db.update_user(uid, login=login)
     await _finish_edit(update, context, uid, "Login o'zgartirildi")
@@ -819,11 +829,11 @@ async def edit_pass_text(update, context):
 async def _finish_edit(update, context, user_id, message):
     context.user_data["flow"] = None
     context.user_data.pop("edit_user_id", None)
-    await update.message.reply_text(f"✅ {message}.")
+    await update.message.reply_text(f"вњ… {message}.")
     user = db.get_user_by_id(user_id)
     status = "ro'yxatdan o'tgan" if user["registered"] else "kutilmoqda"
     await update.message.reply_text(
-        f"👤 {user['name']}\n🔑 Login: {user['login']}\n📊 Holat: {status}",
+        f"рџ‘¤ {user['name']}\nрџ”‘ Login: {user['login']}\nрџ“Љ Holat: {status}",
         reply_markup=kb.user_detail_keyboard(user_id),
     )
 
@@ -834,7 +844,7 @@ async def user_delete_confirm(update, context, user_id: int):
     user = db.get_user_by_id(user_id)
     await _edit(
         update,
-        f"❗ {user['name']} ni o'chirishni tasdiqlaysizmi?",
+        f"вќ— {user['name']} ni o'chirishni tasdiqlaysizmi?",
         confirm_keyboard(f"udel_yes:{user_id}", "user_list"),
     )
 
@@ -852,6 +862,90 @@ async def flow_cancel(update, context):
     context.user_data.pop("reg", None)
     context.user_data.pop("edit_user_id", None)
     if _admin(update):
-        await _edit(update, "❌ Amal bekor qilindi.", kb.admin_menu())
+        await _edit(update, "вќЊ Amal bekor qilindi.", kb.admin_menu())
     else:
-        await _edit(update, "❌ Amal bekor qilindi. /start buyrug'ini qayta bosing.")
+        await _edit(update, "вќЊ Amal bekor qilindi. /start buyrug'ini qayta bosing.")
+
+# =========================================================================== #
+# Kitobdan savol qo'shish
+# =========================================================================== #
+async def book_source_start(update, context, arena_id: int):
+    from ..books import list_books
+
+    context.user_data["flow"] = None
+    context.user_data.pop("new_q", None)
+    books = list_books()
+    if not books:
+        await _edit(update, "рџ“љ Hozircha kitoblar yo'q.", kb.back_button(f"arena:{arena_id}"))
+        return
+    await _edit(
+        update,
+        "рџ“љ Kitobdan qo'shish\n\nKitobni tanlang:",
+        kb.books_keyboard(books, arena_id),
+    )
+
+
+async def book_units(update, context, book_id: str, arena_id: int, page: int = 0):
+    from ..books import get_book
+
+    book = get_book(book_id)
+    if not book:
+        await _edit(update, "вќЊ Kitob topilmadi.", kb.back_button(f"arena:{arena_id}"))
+        return
+    units = book.get("units", [])
+    await _edit(
+        update,
+        f"рџ“љ {book['title']}\n\nUnitni tanlang:",
+        kb.book_units_keyboard(book_id, units, arena_id, page=page),
+    )
+
+
+async def book_unit_types(update, context, book_id: str, unit: int, arena_id: int):
+    from ..books import get_book, available_question_types
+
+    book = get_book(book_id)
+    if not book:
+        await _edit(update, "вќЊ Kitob topilmadi.", kb.back_button(f"arena:{arena_id}"))
+        return
+    types = available_question_types(book_id, unit)
+    await _edit(
+        update,
+        f"рџ“љ {book['title']} вЂ” Unit {unit}\n\nQaysi turdagi savollar qo'shilsin?",
+        kb.book_qtype_keyboard(book_id, unit, arena_id, types),
+    )
+
+
+async def book_apply(update, context, book_id: str, unit: int, qtype: str, arena_id: int):
+    from ..books import get_book, build_question_items
+
+    book = get_book(book_id)
+    if not book:
+        await _edit(update, "вќЊ Kitob topilmadi.", kb.back_button(f"arena:{arena_id}"))
+        return
+
+    items = build_question_items(book_id, unit, qtype)
+    if not items:
+        from ..books import available_question_types
+        types = available_question_types(book_id, unit)
+        await _edit(
+            update,
+            f"❌ {book['title']} Unit {unit} uchun '{qtype}' turida savol yaratib bo'lmadi.\n"
+            "Ehtimol bu unitda ta'rif/misol yetarli emas.",
+            kb.book_qtype_keyboard(book_id, unit, arena_id, types),
+        )
+        return
+
+    added = db.add_questions_bulk(arena_id, items, qtype)
+    arena = db.get_arena(arena_id)
+    labels = {
+        "vocab": "lug'at",
+        "definition": "definitionв†’word",
+        "gap": "gap-fill",
+    }
+    label = labels.get(qtype, qtype)
+    await _edit(
+        update,
+        f"вњ… {book['short']} Unit {unit} dan {added} ta {label} savol qo'shildi.\n\n"
+        f"рџЏџ {arena['title']}\nрџ“‹ Jami savollar: {len(db.list_questions(arena_id))}",
+        kb.arena_detail_keyboard(arena),
+    )

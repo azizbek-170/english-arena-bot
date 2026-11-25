@@ -8,10 +8,10 @@ Ishtirokchilar ikki bosqichli test topshiradi: variant tanlash (`a/b/c/d`) va ja
 24/7 ishga tushirish bo'yicha qo'llanma: [`DEPLOY_GITHUB_RENDER.md`](DEPLOY_GITHUB_RENDER.md) (GitHub + Render Free + Neon Free, karta kerak emas).
 
 **Savol turlari:**
-- 📖 **Lug'at so'zi** — o'zbekcha so'z → inglizcha javob.
-- ✏️ **Gap to'ldirish (gap filling)** — `I ___ from Uzbekistan.` kabi gapdagi nuqta o'rniga to'g'ri so'zni topish.
-- 💬 **Idiom** — idiom ma'nosini definition bo'yicha topish, keyin idiomni o'zi yozish. Har to'g'ri bosqich **3 achko** beradi (darajadan qat'i nazar).
-
+- **Lug'at so'zi** - o'zbekcha so'z/ma'no → inglizcha javob.
+- **Definition → Word** - inglizcha ta'rif ko'rsatiladi, to'g'ri so'zni topish/yozish kerak.
+- **Gap to'ldirish (gap filling)** - `I ___ from Uzbekistan.` kabi gapdagi nuqta o'rniga to'g'ri so'zni topish.
+- **Idiom** - idiom ma'nosini definition bo'yicha topish, keyin idiomni o'zi yozish. Har to'g'ri bosqich **3 achko** beradi (darajadan qat'i nazar).
 ---
 
 ## 1. .env fayli
@@ -107,13 +107,13 @@ psql -U postgres -d quiz_bot -f schema.sql
 - Arena qo'shish: nomi → tavsif → daraja (A1…C2).
 - Arenalar ro'yxati → arena ustiga bosish:
   - arenani ochish/yopish (status),
-  - **➕ Savol qo'shish** → avval turini tanlang:
+  - **➕ Savol qo'shish** - avval turini tanlang:
     - *Lug'at so'zi*: o'zbekcha so'z, inglizcha javob, `a/b/c/d` variantlar, to'g'ri harf;
+    - *Definition → Word*: inglizcha ta'rif, inglizcha so'z, `a/b/c/d` variantlar, to'g'ri harf;
     - *Gap to'ldirish*: nuqtali gap (masalan `I ___ to school.`), nuqta o'rniga keladigan so'z, `a/b/c/d` variantlar, to'g'ri harf;
     - *Idiom*: idiom, typing uchun idiom o'zi, `a/b/c/d` ma'no (definition) variantlari, to'g'ri harf;
-  - **🤖 AI lug'at qo'shish** — tanlangan daraja uchun 60 ta lug'atdan 10 tasini yuklaydi;
-  - **🤖 AI gap-fill qo'shish** — tanlangan daraja uchun 10 ta gap-fill savolini yuklaydi;
-  - **🤖 AI idiom qo'shish** — tanlangan daraja uchun tayyor idiomlarni definition + o'zbekcha tarjima bilan yuklaydi (jami 259 ta noyob idiom: A1=24, A2=46, B1=68, B2=62, C1=42, C2=17);
+  - **📚 Kitobdan qo'shish** - kitob → unit → savol turi (Vocab / Definition→Word / Gap-fill) tanlab, tayyor savollarni arenaga qo'shish. Hozircha `4000 Essential English Words 1` qo'shilgan: Unit 1 to'liq namunaviy, Unit 2-30 so'z ro'yxati mavjud (ta'rif/misol kiritilgach shu formatda savol generatsiya bo'ladi).
+  - **🤖 AI lug'at/gap-fill/idiom** - tanlangan daraja uchun tayyor savollarni yuklaydi;
   - savollar ro'yxati / savol o'chirish,
   - arenani o'chirish.
 
@@ -200,6 +200,9 @@ telegram_quiz_bot/
     ├── vocabulary.py       # lug'at (60 so'z) + gap-fill (60 gap) + idiom savollari
     ├── idioms_data.py      # 259 ta IELTS idiom: definition + o'zbekcha tarjima + daraja
     ├── utils.py
+    ��� books/              # Kitob manbalari (Essential 1 va boshqalar)
+    �?   ��� __init__.py     # kitob registri + savol generatsiyasi
+    �?   ��� essential1.py   # 4000 Essential English Words 1 (30 unit)
     └── handlers/
         ├── start.py        # /start va ro'yxatdan o'tish
         ├── admin.py        # Admin panel oqimlari
