@@ -2,6 +2,9 @@
 
 from telegram import InlineKeyboardMarkup
 
+import csv
+import io
+
 from .. import database as db
 from .. import keyboards as kb
 from ..config import ADMIN_ID
@@ -425,6 +428,100 @@ async def qe_text(update, context):
 async def question_edit_correct(update, context, question_id: int, arena_id: int, letter: str):
     db.update_question(question_id, correct=letter)
     await question_info(update, context, question_id, arena_id)
+
+
+async def questions_export(update, context, arena_id: int):
+    if not _admin(update):
+        return
+    arena = db.get_arena(arena_id)
+    questions = db.list_questions(arena_id)
+    if not questions:
+        await _edit(update, "❌ Bu arenada eksport qilish uchun savol yo'q.", kb.back_button(f"arena:{arena_id}"))
+        return
+
+    output = io.StringIO()
+    fieldnames = ["uz_word", "en_word", "opt_a", "opt_b", "opt_c", "opt_d", "correct", "question_type"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for q in questions:
+        writer.writerow({k: q.get(k, "") for k in fieldnames})
+
+    data = io.BytesIO(output.getvalue().encode("utf-8-sig"))
+    name = f"arena_{arena_id}_questions.csv"
+    caption = f"📤 {arena['title'] if arena else 'Arena'} — {len(questions)} ta savol"
+    await update.callback_query.message.reply_document(document=data, filename=name, caption=caption)
+    await _edit(update, f"✅ CSV eksport tayyor: {len(questions)} ta savol.", kb.back_button(f"arena:{arena_id}"))
+
+
+async def question_import_start(update, context, arena_id: int):
+    if not _admin(update):
+        return
+    context.user_data["flow"] = "q_import_csv"
+    context.user_data["import_arena_id"] = arena_id
+    await _edit(
+        update,
+        "📥 CSV IMPORT\n\n"
+        "CSV fayl yuboring. Ustunlar:\n"
+        "uz_word,en_word,opt_a,opt_b,opt_c,opt_d,correct,question_type\n\n"
+        "correct: a/b/c/d\n"
+        "question_type: vocab/gap/idiom (bo'sh bo'lsa vocab)\n\n"
+        "Bekor qilish uchun /cancel yozing.",
+    )
+
+
+async def question_import_document(update, context):
+    if not _admin(update):
+        return
+    if context.user_data.get("flow") != "q_import_csv":
+        return
+    arena_id = context.user_data.get("import_arena_id")
+    doc = update.message.document
+    if not doc:
+        await update.message.reply_text("❌ CSV fayl yuboring.")
+        return
+    if not (doc.file_name or "").lower().endswith(".csv"):
+        await update.message.reply_text("❌ Faqat .csv fayl yuboring.")
+        return
+
+    tg_file = await doc.get_file()
+    raw = await tg_file.download_as_bytearray()
+    text = raw.decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(io.StringIO(text))
+    required = {"uz_word", "en_word", "opt_a", "opt_b", "opt_c", "opt_d", "correct"}
+    fields = set(reader.fieldnames or [])
+    if not required.issubset(fields):
+        await update.message.reply_text(
+            "❌ CSV ustunlari noto'g'ri. Kerak: uz_word,en_word,opt_a,opt_b,opt_c,opt_d,correct,question_type"
+        )
+        return
+
+    added = 0
+    skipped = 0
+    for row in reader:
+        uz = (row.get("uz_word") or "").strip()
+        en = (row.get("en_word") or "").strip()
+        opts = [(row.get(k) or "").strip() for k in ("opt_a", "opt_b", "opt_c", "opt_d")]
+        correct = (row.get("correct") or "").strip().lower()
+        qtype = (row.get("question_type") or "vocab").strip().lower() or "vocab"
+        if not uz or not en or not all(opts) or correct not in "abcd":
+            skipped += 1
+            continue
+        if qtype not in {"vocab", "gap", "idiom"}:
+            qtype = "vocab"
+        db.add_question(arena_id, uz, en, *opts, correct, qtype)
+        added += 1
+
+    context.user_data["flow"] = None
+    context.user_data.pop("import_arena_id", None)
+    arena = db.get_arena(arena_id) if arena_id else None
+    msg = f"✅ Import tugadi. Qo'shildi: {added} ta"
+    if skipped:
+        msg += f", o'tkazildi: {skipped} ta"
+    if arena:
+        msg += f"\n\n🏟 {arena['title']}\n❓ Jami savollar: {len(db.list_questions(arena_id))}"
+        await update.message.reply_text(msg, reply_markup=kb.arena_detail_keyboard(arena))
+    else:
+        await update.message.reply_text(msg)
 
 
 # =========================================================================== #

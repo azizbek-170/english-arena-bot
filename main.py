@@ -94,7 +94,7 @@ async def text_router(update, context):
     if text in (kb.BTN_ADMIN, kb.BTN_ENGLISH, kb.BTN_LOGIN):
         context.user_data["flow"] = None
         context.user_data["quiz"] = None
-        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id", "edit_q"):
+        for key in ("new_arena", "new_q", "new_user", "reg", "edit_user_id", "edit_q", "import_arena_id"):
             context.user_data.pop(key, None)
         if text == kb.BTN_ADMIN:
             if update.effective_user.id != ADMIN_ID:
@@ -113,6 +113,15 @@ async def text_router(update, context):
     # 2-qism: typing javobi
     if context.user_data.get("quiz") and context.user_data["quiz"].get("stage") == "typing":
         await quiz_h.handle_typing(update, context)
+        return
+
+    if flow == "q_import_csv":
+        if text.lower() in ("/cancel", "bekor", "bekor qilish"):
+            context.user_data["flow"] = None
+            context.user_data.pop("import_arena_id", None)
+            await update.message.reply_text("❌ CSV import bekor qilindi.")
+        else:
+            await update.message.reply_text("📥 CSV fayl yuboring yoki /cancel yozing.")
         return
 
     if flow in TEXT_FLOWS:
@@ -208,6 +217,10 @@ async def callback_router(update, context):
         return await admin_h.question_edit_correct(update, context, int(p[1]), int(p[2]), p[3])
     if head == "qdel" and len(p) == 3:
         return await admin_h.question_delete(update, context, int(p[1]), int(p[2]))
+    if head == "qexport" and len(p) == 2:
+        return await admin_h.questions_export(update, context, int(p[1]))
+    if head == "qimport" and len(p) == 2:
+        return await admin_h.question_import_start(update, context, int(p[1]))
 
     # --- AI lug'at / gap-fill ---
     if head == "aivocab" and len(p) == 2:
@@ -263,6 +276,13 @@ async def callback_router(update, context):
 # =========================================================================== #
 # Botni ishga tushirish
 # =========================================================================== #
+async def document_router(update, context):
+    if context.user_data.get("flow") == "q_import_csv":
+        await admin_h.question_import_document(update, context)
+        return
+    await update.message.reply_text("Hozir hujjat qabul qilinmaydi. CSV import uchun admin paneldan foydalaning.")
+
+
 def main():
     start_health_server()
     db.init_db()
@@ -275,6 +295,7 @@ def main():
     application.add_handler(CommandHandler("cancel_arena", quiz_h.cancel_arena))
     application.add_handler(CallbackQueryHandler(callback_router))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_router))
+    application.add_handler(MessageHandler(filters.Document.ALL, document_router))
     application.add_error_handler(error_handler)
 
     logger.info("Bot ishga tushdi (admin_id=%s)", ADMIN_ID)
